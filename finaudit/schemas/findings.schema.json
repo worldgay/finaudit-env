@@ -28,7 +28,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "one of DUPLICATE_INVOICE, PAYMENT_ALLOCATION, FX_CONVERSION, PERIOD_CUTOFF (case-insensitive)"
+            "description": "one of DUPLICATE_INVOICE, PAYMENT_ALLOCATION, FX_CONVERSION, PERIOD_CUTOFF, compared exactly; any other string is a valid but unmatched finding (FP)"
           },
           "affected_ids": {
             "type": "array",
@@ -44,7 +44,7 @@
           },
           "currency": {
             "type": "string",
-            "pattern": "^[A-Za-z]{3}$"
+            "description": "compared exactly with the truth currency (no case or space normalisation); expected code per type in policy.json → finding_currency_by_type"
           },
           "evidence_ids": {
             "type": "array",
