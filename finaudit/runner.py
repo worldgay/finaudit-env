@@ -13,7 +13,7 @@ import argparse
 import json
 import os
 import pwd
-import selectors
+import select
 import shutil
 import subprocess
 import sys
@@ -123,17 +123,42 @@ def secure_dir(path: Path, owner: str | None) -> None:
 
 
 def _read_line(proc: subprocess.Popen, deadline: float) -> str | None:
-    """One line from an agent's stdout, or None on timeout/EOF."""
-    sel = selectors.DefaultSelector()
-    sel.register(proc.stdout, selectors.EVENT_READ)
-    try:
+    """One line (at most MAX_LINE bytes) from an agent's stdout, or None on timeout/EOF.
+
+    Raw reads into a per-process buffer, so a partial line without newline cannot block past the deadline.
+    """
+    fd = proc.stdout.fileno()
+    buf: bytes = getattr(proc, "_line_buf", b"")
+    while b"\n" not in buf[:MAX_LINE] and len(buf) < MAX_LINE:
         remaining = deadline - time.monotonic()
-        if remaining <= 0 or not sel.select(timeout=remaining):
+        if remaining <= 0 or not select.select([fd], [], [], remaining)[0]:
             return None
-        line = proc.stdout.readline(MAX_LINE)
-        return line.decode("utf-8", "replace") if line else None
-    finally:
-        sel.close()
+        chunk = os.read(fd, 65536)
+        if not chunk:
+            return None
+        buf += chunk
+    end = buf.find(b"\n", 0, MAX_LINE)
+    cut = end + 1 if end >= 0 else MAX_LINE
+    line, proc._line_buf = buf[:cut], buf[cut:]  # type: ignore[attr-defined]
+    return line.decode("utf-8", "replace")
+
+
+def _write_line(proc: subprocess.Popen, data: bytes, deadline: float) -> bool:
+    """Write to an agent's stdin without blocking past the deadline (False: timeout or agent gone)."""
+    fd = proc.stdin.fileno()
+    os.set_blocking(fd, False)
+    view = memoryview(data)
+    while view:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0 or not select.select([], [fd], [], remaining)[1]:
+            return False
+        try:
+            view = view[os.write(fd, view):]
+        except BlockingIOError:
+            continue
+        except OSError:
+            return False
+    return True
 
 
 class _Server:
@@ -175,9 +200,8 @@ def _agent_loop(server: _Server, agent, oracle, first: dict, eid: str, name: str
         if oracle is not None:
             action: object = oracle.act(obs)
         else:
-            agent.stdin.write((dumps(obs) + "\n").encode("utf-8"))
-            agent.stdin.flush()
-            line = _read_line(agent, deadline)
+            sent = _write_line(agent, (dumps(obs) + "\n").encode("utf-8"), deadline)
+            line = _read_line(agent, deadline) if sent else None
             if line is None:
                 reply = server.call({"cmd": "timeout"})
                 records.append(_traj(eid, step + 1, None, reply["observation"], reply["reward"],
@@ -185,7 +209,7 @@ def _agent_loop(server: _Server, agent, oracle, first: dict, eid: str, name: str
                 return records
             try:
                 action = json.loads(line)
-            except json.JSONDecodeError:
+            except (ValueError, RecursionError):  # bad JSON, 4300-digit ints, deep nesting
                 action = line.strip()[:200]
         reply = server.call({"cmd": "step", "action": action})
         step += 1

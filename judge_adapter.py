@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+from pathlib import Path
 
 from finaudit.env.core import FinAuditEnv
 from finaudit.env.store import Store
@@ -55,7 +56,7 @@ class JudgeEnv:
     def __init__(self, time_limit: float = TIME_LIMIT_SECONDS) -> None:
         self.time_limit = time_limit
         self.env = FinAuditEnv()
-        self.started = 0.0
+        self.started: float | None = None
 
     def reset(self, seed: int | None = 0, config: dict | None = None) -> tuple[dict, dict]:
         """``mode`` closed -> the environment's eval mode (reward 0, no diagnostics)."""
@@ -67,8 +68,10 @@ class JudgeEnv:
         inner["mode"] = "eval" if mode == "closed" else "train"
         if config.get("episode_dir"):
             inner["episode_dir"] = str(config["episode_dir"])
+            if not (Path(inner["episode_dir"]) / "public" / "manifest.json").is_file():
+                raise FileNotFoundError("episode_dir must contain public/manifest.json")
+        self.started = time.monotonic()  # the 60 s budget starts at reset, as in the checks
         obs, _ = self.env.reset(seed, inner)
-        self.started = time.monotonic()
         res = obs["result"]
         first = {"task": res["task"], "manifest": res["manifest"], "policy": res["policy"],
                  "remaining_steps": obs["steps_left"]}
@@ -76,6 +79,8 @@ class JudgeEnv:
 
     def step(self, action: object) -> tuple[dict, float, bool, bool, dict]:
         """One action ``{"name": ..., "args": {...}}``; every call before the end costs a step."""
+        if self.started is None:
+            raise RuntimeError("call reset() first")
         if not self.env.done and time.monotonic() - self.started > self.time_limit:
             obs, reward, term, trunc, info = self.env.force_truncate()
             return self._obs(None, obs), reward, term, trunc, info

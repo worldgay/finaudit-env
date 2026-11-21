@@ -1,5 +1,9 @@
 `docker build -t finaudit . && docker run --rm --network none --cpus 2 --memory 4g finaudit make check`
 
+> **Для жюри (RU):** памятка на русском — [`docs/JURY.md`](docs/JURY.md): запуск, адаптер, рецепты D01–D20,
+> правила пересчёта и переименования ID. Windows PowerShell 5.1 не знает `&&` — выполните две команды по очереди:
+> `docker build -t finaudit .`, затем `docker run --rm --network none --cpus 2 --memory 4g finaudit make check`.
+
 # FinAudit RL environment
 
 A reproducible, offline reinforcement-learning environment for an **AI financial auditor**. It generates
@@ -10,13 +14,17 @@ baseline policies are included only to show that the environment is neither triv
 
 All data is fictional (names assembled from syllables, no real companies, banks, IBANs, cards or people).
 Runtime = Python 3.11 standard library + `tzdata==2024.2`; tests need only `pytest==8.3.3`. No network, GPU
-or paid API is used. The pinned wheels are vendored in `vendor/wheels/`, so `docker build` works offline too.
+or paid API is used. The pinned wheels are vendored in `vendor/wheels/`, so `docker build` needs no network
+once the base image `python:3.11-slim` is on the machine (`docker pull python:3.11-slim` once, or
+`docker load -i <saved image tar>`; verified digest in the `Dockerfile` header). Run the image as root (the default):
+the grader-owned `private/` directories are unreadable for other users on purpose, so a `--user` run fails the
+shipped-data leak test with `PermissionError`.
 
 ## Quick start
 
 | Command | What it does |
 |---|---|
-| `make check` | full test suite (280 tests) + smoke run: 2 fresh episodes, verify, 4 policies, leak scan |
+| `make check` | full test suite (287 tests, ≈45–65 s in total; the 60 s limit is per episode) + smoke run: 2 fresh episodes, verify, 4 policies, leak scan |
 | `make docker-check` | builds the image and runs `make check` with `--network none --cpus 2 --memory 4g` |
 | `make episodes` | regenerates the shipped dataset `episodes/{train,dev}` (10 + 10, verified) |
 | `make trajectories` | 4 policies × 10 train episodes → `trajectories/trajectories.jsonl` |
@@ -103,7 +111,11 @@ and in which the reference auditor finds nothing.
 | `FX_CONVERSION` | invoice_id or payment_id | \|booked − policy\| of the AR/AP (invoice) or BANK (payment) row, base currency | document + `fx:` row of the correct date + the affected row |
 | `PERIOD_CUTOFF` | invoice_id | booked AR/AP amount, base currency | invoice doc + its AR/AP row |
 
-Unallocated part = ref amount − `round_half_even(posted_base / rate(invoice date))` in payment minor units.
+An allocation `(payment, invoice_ref)` is **complete** (no finding) iff the signed AR/AP amount posted for it equals
+`fx_conversion(invoice_ref.amount_minor, rate of the invoice date)` (identity for a base-currency payment). Only
+otherwise unallocated part = ref amount − `round_half_even(posted_base / rate(invoice date))` in payment minor
+units. Apply this order when re-computing independently: the inverse conversion alone does not round-trip and
+would report spurious 1-unit gaps on correct books (`finaudit/generator/reference_audit.py`, `_payment_checks`).
 Two interaction scenarios add two linked issues each: **I1** — a foreign customer payment late on the last
 day, BANK booked at the UTC-date (or next-day) rate, then partially parked on SUSPENSE; **I2** — a duplicated
 invoice whose single payment is booked 50/50 to original and copy. Every episode also contains ≥ 3 kinds of
@@ -124,6 +136,8 @@ Follows the organisers' exact matcher conventions (`docs/CHECKS.md`, tests `test
 3. A pair (finding, issue) is admissible iff type equal, affected-id sets equal, currency equal,
    `|claimed − expected| ≤ τ(type)`, every evidence id exists in the public records, and the evidence contains a
    complete admissible set (extra existing ids are fine). `explanation` never affects the score.
+   Evidence ids are the canonical record ids only: ledger `row_id`, document `doc_id`, `fx:DATE:SRC:TGT`.
+   The aliases that `get_record` also accepts (`invoice_id`, `payment_id`, fx id without `fx:`) are not evidence ids.
 4. τ is a fixed non-negative integer per type published in `policy.json → amount_tolerance_minor`
    (missing → 0). Shipped value: **0 for all four types** — every expected amount follows exactly from the
    formulas in `policy.json` (`fx_conversion`, `payment_allocation_amount`, ROUND_HALF_EVEN).
@@ -155,7 +169,25 @@ accepted), `fx` (id `fx:DATE:SRC:TGT`). Error types (case §02 → our `type`): 
 Error codes: `UNKNOWN_ACTION`, `BAD_ARGS`, `UNKNOWN_TABLE`, `NOT_FOUND`, `BAD_CURSOR`, `LIMIT_TOO_LARGE`,
 `BAD_EXPRESSION`, `EPISODE_DONE`, `INVALID_FINDINGS`. For paired checks the jury edits a copy of the episode
 directory (ids in public files, truth and provenance); nothing in the loader depends on file hashes or id format.
-Contract block C01–C20: `tests/test_judge_adapter.py`.
+Keep renamed ids unique across all namespaces (`get_record` resolves `doc_id` before the `invoice_id` /
+`payment_id` alias); the full list of id-bearing fields is in `docs/JURY.md`. `generation.json` hashes and the
+team verifier's id patterns are expected to fail on such edited copies; loading and grading do not use them.
+The 60 s limit is checked on each `step`; a policy that never calls `step` again is stopped by the caller.
+Run only the jury blocks: `docker run --rm --network none finaudit python -m pytest -q tests/test_judge_adapter.py
+tests/test_jury_matcher.py tests/test_hostile_input.py`.
+
+## Measured failures (found → cause → fix → re-check)
+
+A pre-submission audit drove the environment through `judge_adapter.py` and the eval runner with hostile input.
+Each failure below was reproduced, fixed, and is re-checked by `tests/test_hostile_input.py` (the tests fail on
+v1.2.0 and pass now).
+
+| Measured failure (v1.2.0) | Cause | Fix |
+|---|---|---|
+| A cursor of `"["` × 1 100 (base64) made `step` raise `RecursionError` into the caller | `decode_cursor` did not catch `RecursionError` | caught → `BAD_CURSOR`; any unexpected handler exception → bounded `BAD_ARGS`, step still counted |
+| An agent writing `{` without newline, or flooding actions without reading, hung the eval runner past 60 s (killed at 120 s) | blocking `readline` / `stdin.write` on pipes | raw non-blocking reads/writes with the episode deadline → `truncated`, empty findings |
+| An agent line `"["` × 100 000 or a 5 000-digit integer aborted the episode without a grade | only `JSONDecodeError` was caught | `ValueError`/`RecursionError` → treated as an invalid action (bounded error) |
+| `reset` on a copy without `private/truth.json` → `KeyError`; `step` before `reset` → `AttributeError` | missing guards | closed mode loads with an empty truth (grading is `score_episode`); clear `RuntimeError` / `FileNotFoundError` |
 
 ## Baseline policies (`finaudit/policies/`)
 
@@ -166,7 +198,9 @@ UTC date, allocation without FX rates, no FX checks — it falls into the traps 
 
 ## Configs
 
-`configs/*.json` (all with `config_version`). Missing keys take defaults; `errors.<TYPE>` accepts `{"count": n}`,
+`configs/*.json` (all with `config_version`). Missing keys take defaults — including omitted error types
+(`count [0, 2]`) and interactions (`[0, 1]`), so a single-type episode needs the other types set to 0 explicitly
+(ready recipes for D01–D20 in `docs/JURY.md`); `errors.<TYPE>` accepts `{"count": n}`,
 `{"count": [a, b]}` or the shorthand `n` / `[a, b]`; keys that do not describe data (`mode`, `episode_dir`, `seed`,
 `description`, …) are ignored for generation. Base currency: any of KZT, USD, EUR, GBP, JPY (random among the first
 three when null); time zone: any of the six in `world.TZ_POOL`. `reset(seed=None)` means seed 0.
@@ -176,6 +210,11 @@ three when null); time zone: any of the six in `world.TZ_POOL`. `reset(seed=None
 One `random.Random` per episode seeded from `sha256(seed | canonical config hash | ENV_VERSION | attempt)`; no
 clock, `hash()` or set iteration in generation; canonical JSON everywhere; the time-zone database is pinned to
 the `tzdata` package. `transform(episode, perm_seed)` shuffles every table and renames every id — the oracle
-reward is unchanged (20/20 in `make jury`).
+reward is unchanged (20/20 in `make jury`). Seeds must be secret and high-entropy (e.g. 64-bit): the generator is
+public, so a small or sequential seed (like the shipped 1001–1010) can be found by brute force from the public
+data in well under 60 s. The shipped train/dev seeds are public on purpose.
+
+Release v1.2.1 = v1.2.0 data and rules (`ENV_VERSION` and every episode byte stay 1.2.0) plus the robustness
+fixes listed under "Measured failures" and the jury memo `docs/JURY.md`.
 
 License: MIT.

@@ -1,10 +1,13 @@
+# Verified on python:3.11-slim@sha256:07d4824036af339fa1b6ef769cc99d9c10a141769538b52b3b597c84f7a7b535
+# (tag kept unpinned on purpose: an offline machine with any cached 3.11-slim can still build).
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONHASHSEED=0 \
     PYTHONUNBUFFERED=1 \
     FINAUDIT_DOCKER=1 \
-    PY=python
+    PY=python \
+    PYTHONPATH=/app
 
 WORKDIR /app
 

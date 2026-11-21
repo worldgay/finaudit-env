@@ -1,0 +1,120 @@
+# Памятка для жюри (FinAudit RL environment)
+
+Коротко и по-русски: как запустить среду, подключить её через `judge_adapter.py` и воспроизвести
+проверки из `docs/CHECKS.md`. Подробности на английском — в `README.md` и `DESIGN.md`.
+
+## 1. Запуск
+
+```
+docker build -t finaudit .
+docker run --rm --network none --cpus 2 --memory 4g finaudit make check
+```
+
+* В Windows PowerShell 5.1 нет `&&`, поэтому две команды выполняются по очереди.
+* Сборке нужна сеть только для базового образа `python:3.11-slim` (один раз `docker pull python:3.11-slim` или
+  `docker load -i <tar>`). Зависимости лежат в `vendor/wheels/`, остальная сборка офлайн. Проверенный digest образа
+  записан в шапке `Dockerfile`.
+* Ожидаемый итог: `287 passed`, `smoke: OK`, `make check: OK` (≈45–65 с на 2 CPU; лимит 60 с — на эпизод, а не на весь
+  набор тестов).
+* Контейнер запускается от root (по умолчанию). Каталоги `private/` принадлежат пользователю `grader` с правами 700;
+  при `--user` тест утечек в отгруженных данных падает с `PermissionError` — так задумано.
+* Только блоки жюри:
+  `docker run --rm --network none finaudit python -m pytest -q tests/test_judge_adapter.py tests/test_jury_matcher.py tests/test_hostile_input.py`
+* Имитация закрытой проверки (20 эпизодов × 4 политики, 20 парных, 20 повторов): `make jury`; отчёт — `REPORT.md`.
+* Демо: `docker run --rm --network none finaudit make demo`.
+
+## 2. Адаптер `judge_adapter.py`
+
+Рабочая директория в образе — `/app`, `PYTHONPATH=/app` уже задан.
+
+```python
+import judge_adapter as ja
+ja.generate_episode(seed, team_config, "/jury/ep")          # public/* и private/{truth,provenance,generation}.json
+env = ja.make_env()
+obs, info = env.reset(seed, {"mode": "closed", "episode_dir": "/jury/ep"})
+obs, reward, terminated, truncated, info = env.step({"name": "list_records",
+                                                     "args": {"table": "ledger", "cursor": None, "limit": 50}})
+ja.score_episode("/jury/ep", findings, inspection_steps)    # {"tp","fp","fn","precision","recall","f1","return"}
+```
+
+* Таблицы: `ledger` (id = `row_id`), `invoices`, `payments` (id = `doc_id`; также принимаются `invoice_id` /
+  `payment_id`), `fx` (id = `fx:ДАТА:ИСХ:ЦЕЛ`).
+* Типы ошибок кейса §02 → поле `type`: дубли счетов → `DUPLICATE_INVOICE`; пропущенное/частичное распределение
+  платежа → `PAYMENT_ALLOCATION`; неверная дата или курс конвертации → `FX_CONVERSION`; неверный период →
+  `PERIOD_CUTOFF`. Сценарии взаимодействия: `I1`, `I2`.
+* Закрытый режим: награда 0 на каждом шаге и в конце, `info = {"steps_used"}`; истинную оценку даёт `score_episode`.
+* Лимиты: 100 действий включая submit; 100 исследовательских → `truncated`, пустые выводы; 60 с от начала `reset`
+  проверяются при каждом `step` (политику, которая больше не вызывает `step`, останавливает вызывающая сторона).
+* Без `private/truth.json` в каталоге эпизода закрытый `reset` работает (оценка всё равно идёт через
+  `score_episode`); `step` до `reset` → `RuntimeError`; каталог без `public/manifest.json` → `FileNotFoundError`.
+* Доказательства (`evidence_ids`) — только канонические ID: `row_id`, `doc_id`, `fx:ДАТА:ИСХ:ЦЕЛ`. Алиасы
+  (`invoice_id`, `payment_id`, fx без `fx:`) годятся для `get_record`, но не как доказательства.
+* Допуск суммы τ — целое число на тип в `policy.json → amount_tolerance_minor`; в отгруженных данных 0 для всех типов.
+  Чтобы задать τ в своей фикстуре (например, M08), меняйте это поле в копии эпизода.
+
+## 3. Рецепты D01–D20
+
+Без явного обнуления не указанные типы ошибок берут значения по умолчанию (`count [0, 2]`, взаимодействия `[0, 1]`).
+Поэтому для эпизода с одним типом обнуляйте остальные. База:
+
+```json
+{"errors": {"DUPLICATE_INVOICE": {"count": 0}, "PAYMENT_ALLOCATION": {"count": 0},
+            "FX_CONVERSION": {"count": 0}, "PERIOD_CUTOFF": {"count": 0}},
+ "interactions": {"I1": 0, "I2": 0}}
+```
+
+| Эпизоды | Конфиг (поверх базы) | Что получится |
+|---|---|---|
+| D01–D05 | `{"clean": true, "timezone": "Asia/Almaty"}` (любой не-UTC пояс) | truth пуст. В каждом чистом эпизоде всегда есть корректные отвлекающие случаи: разбитый платёж (D02), переплата + возврат (D03), еженедельные одинаковые суммы (D04), документы у полуночи и FX-разницы (D05), счета следующего месяца, один платёж на несколько счетов, округление 1 ед. С `timezone: "UTC"` граничный случай у полуночи не возникает — для D05 не используйте UTC |
+| D06–D08 | `"DUPLICATE_INVOICE": {"count": 1}` | 1 × `DUPLICATE_INVOICE` |
+| D09–D11 | `"PAYMENT_ALLOCATION": {"count": 1}` | 1 × `PAYMENT_ALLOCATION`; вариант выбирается seed’ом (см. ниже) |
+| D12–D13 | `"FX_CONVERSION": {"count": 1}` | 1 × `FX_CONVERSION` (неверная дата или обратный курс) |
+| D14–D15 | `"PERIOD_CUTOFF": {"count": 1}` | 1 × `PERIOD_CUTOFF` |
+| D16–D18 | `"interactions": {"I1": 1, "I2": 0}` | `FX_CONVERSION` + `PAYMENT_ALLOCATION`, scenario `I1` (иностранный платёж поздно в последний день, курс по UTC-дате, частично на SUSPENSE) |
+| D19–D20 | `"interactions": {"I1": 0, "I2": 1}` | `DUPLICATE_INVOICE` + `PAYMENT_ALLOCATION`, scenario `I2` (дубль счёта, единственная оплата разнесена 50/50) |
+
+Проверено на seed 101–108: каждый рецепт даёт ровно указанный набор ошибок. Параметры (валюта, пояс, размер) можно
+варьировать полями `base_currency` (KZT, USD, EUR, GBP, JPY), `timezone`, `size`.
+
+**Вариант распределения (D09–D11).** Он задаётся seed’ом, а не ключом конфига. Определить его можно по
+`private/provenance.json` → `injections[]` с `injector = "payment_allocation"`:
+изменение поля `account` (перенос на `SUSPENSE`) — платёж не распределён; все изменения вида `field = "*"`,
+`after = null` (строки удалены) — платёж не проведён; иначе (уменьшены суммы) — частичное распределение.
+Для рецепта D09 при v1.2.0: seed 101 и 104 — SUSPENSE, 102, 107, 108 — не проведён, 103, 105, 106 — частичный.
+
+## 4. Независимый пересчёт (блок 2)
+
+Все формулы — в `policy.json` каждого эпизода; округление ROUND_HALF_EVEN до минимальной единицы.
+
+* Курс берётся на локальную дату документа в `manifest.timezone`; период — по локальной дате, границы включительно.
+* **Распределение платежа.** Пара (платёж, `invoice_refs[i]`) распределена полностью, если проведённая по AR/AP сумма
+  в базовой валюте равна `fx_conversion(invoice_ref.amount_minor, курс даты счёта)`. Только если не равна,
+  нераспределённая часть = `invoice_ref.amount_minor − round_half_even(проведено_в_базе / курс)` в единицах валюты
+  платежа. Обратная формула сама по себе не обратима и на корректных книгах даёт ложные расхождения в 1 единицу,
+  поэтому сначала прямое сравнение. Эталонная реализация: `finaudit/generator/reference_audit.py`, `_payment_checks`.
+* **Provenance** (`private/provenance.json`):
+  `world` (базовая валюта, иностранные валюты, пояс, начало периода, контрагенты), `plan` (сколько ошибок каждого
+  типа и сценариев), `distractors` (какие отвлекающие случаи добавлены), `injections[]` — по одной на ошибку:
+  `issue_id`, `injector`, `order` (порядок внесения), `changes[]` = `{table, id, field, before, after}`.
+  `field = "*"` — запись целиком: `before = null` — запись добавлена, `after = null` — удалена; иначе меняется одно
+  поле. Откат `changes` в обратном порядке `order` даёт книги до ошибок; в них сверка (раздел выше) не находит ни
+  одного расхождения. Таблицы в `changes`: `ledger`, `invoices`.
+
+## 5. Парные проверки (блок 4): что переименовывать
+
+ID-поля: `row_id`, `doc_id`, `invoice_id`, `payment_id`, `entity_id` в `ledger.csv`, `invoices.jsonl`,
+`payments.jsonl`; `payments.invoice_refs[].invoice_id`; в truth — `affected_ids`, `evidence_sets`; в provenance —
+`changes[].id` и те же поля внутри `before`/`after`, `world.entities[].entity_id`.
+
+* `fx:ДАТА:ИСХ:ЦЕЛ` — ключ из даты и пары валют, а не суррогатный ID: не переименовывается.
+* Новые ID должны быть уникальны во всех пространствах сразу (`get_record` сначала ищет `doc_id`, затем алиас).
+* Порядок `line_items` внутри счёта не перемешивайте (сумма не меняется, но это порядок документа).
+* Загрузчик не проверяет хеши и формат ID. Хеши в `generation.json` и шаблоны ID в `verify` командного
+  верификатора на изменённой копии ожидаемо не совпадут — для загрузки и оценки они не используются.
+* Командное преобразование для сравнения: `finaudit/generator/transform.py` (20/20 в `make jury`).
+
+## 6. Seed
+
+Генератор открыт, поэтому seed закрытых эпизодов должны быть секретными и большими (например, 64-битными). Маленький
+или последовательный seed (как у открытых train/dev 1001–1010, 2001–2010) подбирается перебором по открытым данным
+быстрее чем за 60 с.

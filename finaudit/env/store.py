@@ -32,7 +32,7 @@ def decode_cursor(cursor: str, table: str, size: int) -> int:
         ok = (set(data) == {"o", "t"} and data["t"] == table and isinstance(offset, int)
               and not isinstance(offset, bool) and 0 <= offset < size
               and encode_cursor(table, offset) == cursor)
-    except (ValueError, KeyError, TypeError, UnicodeDecodeError, AttributeError):
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError, AttributeError, RecursionError):
         ok = False
     if not ok:
         raise EnvError("BAD_CURSOR", "cursor is not valid for this table")

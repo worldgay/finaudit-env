@@ -58,7 +58,12 @@ class FinAuditEnv:
             from finaudit.generator.generate import generate_episode
             files = generate_episode(seed, config).files
         public = parse_public(files)
-        self.truth = json.loads(files["private/truth.json"])
+        if "private/truth.json" in files:
+            self.truth = json.loads(files["private/truth.json"])
+        elif self.mode == "eval":  # closed run graded outside (judge_adapter.score_episode): reward is 0 anyway
+            self.truth = {"episode_id": public["manifest"]["episode_id"], "issues": []}
+        else:
+            raise ValueError("train mode needs private/truth.json in episode_dir")
         self.manifest = public["manifest"]
         self.policy_doc = public["policy"]
         self.tol = tolerances(self.policy_doc)
@@ -99,6 +104,8 @@ class FinAuditEnv:
             obs = _obs(HANDLERS[name](self.store, action), steps_left=self.steps_left)
         except EnvError as err:
             obs = _obs(error=err, steps_left=self.steps_left)
+        except Exception:  # hostile input must never crash the env: bounded error, step still counted
+            obs = _obs(error=EnvError("BAD_ARGS", "action could not be processed"), steps_left=self.steps_left)
         if self.steps_used >= MAX_STEPS:
             return self._finish(obs, empty_findings(self.truth["episode_id"]), truncated=True)
         return obs, 0.0, False, False, self._info(None)
