@@ -1,0 +1,1 @@
+{"base_currency":"USD","company_name":"Linorafen Holdings","counts":{"documents":160,"fx":44,"invoices":107,"ledger":1102,"payments":53},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-f648c5afebec","period_end":"2026-09-30","period_start":"2026-09-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"UTC"}

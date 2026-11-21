@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent action",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "table"
+      ],
+      "properties": {
+        "action": {
+          "const": "list_records"
+        },
+        "table": {
+          "enum": [
+            "ledger",
+            "invoices",
+            "payments",
+            "fx"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "table",
+        "id"
+      ],
+      "properties": {
+        "action": {
+          "const": "get_record"
+        },
+        "table": {
+          "enum": [
+            "ledger",
+            "invoices",
+            "payments",
+            "fx"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "doc_id"
+      ],
+      "properties": {
+        "action": {
+          "const": "get_document"
+        },
+        "doc_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "expression"
+      ],
+      "properties": {
+        "action": {
+          "const": "calculator"
+        },
+        "expression": {
+          "type": "string",
+          "maxLength": 200
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "findings"
+      ],
+      "properties": {
+        "action": {
+          "const": "submit"
+        },
+        "findings": {
+          "$ref": "findings.schema.json"
+        }
+      }
+    }
+  ]
+}

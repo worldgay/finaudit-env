@@ -1,0 +1,1 @@
+{"base_currency":"KZT","company_name":"Berlolin Group","counts":{"documents":30,"fx":90,"invoices":18,"ledger":1467,"payments":12},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-9bee258924f9","period_end":"2025-03-31","period_start":"2025-03-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"Asia/Tokyo"}

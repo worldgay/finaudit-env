@@ -1,0 +1,57 @@
+{
+  "config_version": "1.0",
+  "mode": "train",
+  "size": {
+    "ledger": [
+      200,
+      2000
+    ],
+    "documents": [
+      20,
+      200
+    ]
+  },
+  "base_currency": null,
+  "foreign_currencies": [
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY"
+  ],
+  "timezone": null,
+  "errors": {
+    "DUPLICATE_INVOICE": {
+      "count": [
+        0,
+        1
+      ]
+    },
+    "PAYMENT_ALLOCATION": {
+      "count": [
+        0,
+        1
+      ]
+    },
+    "FX_CONVERSION": {
+      "count": [
+        0,
+        1
+      ]
+    },
+    "PERIOD_CUTOFF": {
+      "count": [
+        0,
+        1
+      ]
+    }
+  },
+  "interactions": {
+    "I1": 0,
+    "I2": 1
+  },
+  "clean": false,
+  "distractors": {
+    "min_kinds": 3
+  },
+  "description": "scenario I2 (duplicate with split payment) plus up to one error of each type"
+}

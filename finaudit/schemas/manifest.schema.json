@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "public/manifest.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "env_version",
+    "episode_id",
+    "company_name",
+    "base_currency",
+    "period_start",
+    "period_end",
+    "timezone",
+    "counts",
+    "currency_exponents",
+    "rounding"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "env_version": {
+      "type": "string"
+    },
+    "episode_id": {
+      "type": "string",
+      "pattern": "^ep-[0-9a-f]{12}$"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "base_currency": {
+      "enum": [
+        "KZT",
+        "USD",
+        "EUR",
+        "GBP",
+        "JPY"
+      ]
+    },
+    "period_start": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-01$"
+    },
+    "period_end": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "timezone": {
+      "enum": [
+        "Asia/Almaty",
+        "Asia/Tokyo",
+        "Europe/Berlin",
+        "Europe/London",
+        "America/New_York",
+        "UTC"
+      ]
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledger",
+        "invoices",
+        "payments",
+        "fx",
+        "documents"
+      ],
+      "properties": {
+        "ledger": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invoices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "payments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fx": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "documents": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "currency_exponents": {
+      "type": "object"
+    },
+    "rounding": {
+      "const": "ROUND_HALF_EVEN"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"base_currency":"USD","company_name":"Tanlin Trading","counts":{"documents":56,"fx":135,"invoices":42,"ledger":313,"payments":14},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-ed327e6e48fb","period_end":"2026-07-31","period_start":"2026-07-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"Europe/Berlin"}

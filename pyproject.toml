@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finaudit-env"
+version = "1.2.0"
+description = "Reproducible RL environment for an AI financial auditor (synthetic data)"
+requires-python = ">=3.11,<3.12"
+license = {text = "MIT"}
+dependencies = ["tzdata==2024.2"]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.3"]
+
+[tool.setuptools.packages.find]
+include = ["finaudit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["docker: requires the Docker image (users grader/agent, root)", "slow: long-running"]

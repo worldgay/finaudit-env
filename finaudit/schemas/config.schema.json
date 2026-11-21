@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FinAudit episode config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config_version",
+    "mode",
+    "size",
+    "foreign_currencies",
+    "errors",
+    "interactions",
+    "clean",
+    "distractors"
+  ],
+  "properties": {
+    "config_version": {
+      "const": "1.0"
+    },
+    "mode": {
+      "enum": [
+        "train",
+        "eval"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledger",
+        "documents"
+      ],
+      "properties": {
+        "ledger": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "base_currency": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "enum": [
+            "KZT",
+            "USD",
+            "EUR",
+            "GBP",
+            "JPY"
+          ]
+        }
+      ]
+    },
+    "foreign_currencies": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "KZT",
+          "USD",
+          "EUR",
+          "GBP",
+          "JPY"
+        ]
+      },
+      "minItems": 1
+    },
+    "timezone": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "enum": [
+            "Asia/Almaty",
+            "Asia/Tokyo",
+            "Europe/Berlin",
+            "Europe/London",
+            "America/New_York",
+            "UTC"
+          ]
+        }
+      ]
+    },
+    "errors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DUPLICATE_INVOICE",
+        "PAYMENT_ALLOCATION",
+        "FX_CONVERSION",
+        "PERIOD_CUTOFF"
+      ],
+      "properties": {
+        "DUPLICATE_INVOICE": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              ]
+            }
+          }
+        },
+        "PAYMENT_ALLOCATION": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              ]
+            }
+          }
+        },
+        "FX_CONVERSION": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              ]
+            }
+          }
+        },
+        "PERIOD_CUTOFF": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "interactions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "I1",
+        "I2"
+      ],
+      "properties": {
+        "I1": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "I2": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        }
+      }
+    },
+    "clean": {
+      "type": "boolean"
+    },
+    "distractors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_kinds"
+      ],
+      "properties": {
+        "min_kinds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"base_currency":"EUR","company_name":"Tenora GmbH","counts":{"documents":123,"fx":90,"invoices":78,"ledger":1465,"payments":45},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-550e928454d8","period_end":"2026-10-31","period_start":"2026-10-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"Europe/Berlin"}

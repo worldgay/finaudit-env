@@ -1,0 +1,54 @@
+{
+  "config_version": "1.0",
+  "description": "Simulated closed jury check: 20 fresh episodes x 4 policies in eval mode, 20 paired transforms, 20 replays",
+  "groups": [
+    {
+      "name": "clean",
+      "config": "configs/clean.json",
+      "overrides": {},
+      "seeds": [
+        7340000000000000001,
+        7340000000000000002,
+        7340000000000000003,
+        7340000000000000004,
+        7340000000000000005
+      ]
+    },
+    {
+      "name": "interactions",
+      "config": "configs/default.json",
+      "overrides": {
+        "interactions": {
+          "I1": 1,
+          "I2": 1
+        }
+      },
+      "seeds": [
+        7340000000000000101,
+        7340000000000000102,
+        7340000000000000103,
+        7340000000000000104,
+        7340000000000000105
+      ]
+    },
+    {
+      "name": "mixed",
+      "config": "configs/default.json",
+      "overrides": {},
+      "seeds": [
+        7340000000000000201,
+        7340000000000000202,
+        7340000000000000203,
+        7340000000000000204,
+        7340000000000000205,
+        7340000000000000206,
+        7340000000000000207,
+        7340000000000000208,
+        7340000000000000209,
+        7340000000000000210
+      ]
+    }
+  ],
+  "perm_seed_base": 55500,
+  "policy_seed": 7
+}

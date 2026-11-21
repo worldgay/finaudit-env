@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "findings.json (submit payload)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "episode_id",
+    "findings"
+  ],
+  "properties": {
+    "episode_id": {
+      "type": "string"
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "affected_ids",
+          "claimed_amount_minor",
+          "currency",
+          "evidence_ids",
+          "explanation"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "one of DUPLICATE_INVOICE, PAYMENT_ALLOCATION, FX_CONVERSION, PERIOD_CUTOFF (case-insensitive)"
+          },
+          "affected_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "claimed_amount_minor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{3}$"
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10
+          },
+          "explanation": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      }
+    }
+  }
+}

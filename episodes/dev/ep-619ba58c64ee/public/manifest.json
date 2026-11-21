@@ -1,0 +1,1 @@
+{"base_currency":"EUR","company_name":"Rioraka Holdings","counts":{"documents":176,"fx":90,"invoices":122,"ledger":1324,"payments":54},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-619ba58c64ee","period_end":"2025-08-31","period_start":"2025-08-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"Asia/Tokyo"}

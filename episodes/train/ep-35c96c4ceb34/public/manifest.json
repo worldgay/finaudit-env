@@ -1,0 +1,1 @@
+{"base_currency":"EUR","company_name":"Momo GmbH","counts":{"documents":126,"fx":90,"invoices":78,"ledger":1721,"payments":48},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-35c96c4ceb34","period_end":"2026-05-31","period_start":"2026-05-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"UTC"}

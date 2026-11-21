@@ -1,0 +1,1 @@
+{"base_currency":"KZT","company_name":"Rimomir Corp","counts":{"documents":144,"fx":44,"invoices":98,"ledger":1923,"payments":46},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-779a6f3d280c","period_end":"2026-09-30","period_start":"2026-09-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"America/New_York"}

@@ -1,0 +1,1 @@
+{"base_currency":"KZT","company_name":"Linfen Corp","counts":{"documents":74,"fx":132,"invoices":47,"ledger":1048,"payments":27},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-5e65a9d3f15f","period_end":"2026-04-30","period_start":"2026-04-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"Asia/Tokyo"}

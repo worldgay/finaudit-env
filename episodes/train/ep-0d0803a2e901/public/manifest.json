@@ -1,0 +1,1 @@
+{"base_currency":"USD","company_name":"Linquabri Group","counts":{"documents":25,"fx":88,"invoices":18,"ledger":779,"payments":7},"currency_exponents":{"EUR":2,"GBP":2,"JPY":0,"KZT":2,"USD":2},"env_version":"1.2.0","episode_id":"ep-0d0803a2e901","period_end":"2025-06-30","period_start":"2025-06-01","rounding":"ROUND_HALF_EVEN","schema_version":"1.0","timezone":"Asia/Tokyo"}

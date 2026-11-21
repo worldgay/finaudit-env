@@ -1,0 +1,48 @@
+{
+  "config_version": "1.0",
+  "description": "Shipped dataset: 10 train + 10 dev episodes",
+  "sets": {
+    "train": {
+      "config": "configs/train.json",
+      "seeds": [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008,
+        1009,
+        1010
+      ],
+      "special": {
+        "1001": "configs/clean.json",
+        "1002": "configs/clean.json",
+        "1003": "configs/i1.json",
+        "1004": "configs/i2.json"
+      }
+    },
+    "dev": {
+      "config": "configs/dev.json",
+      "seeds": [
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010
+      ],
+      "special": {
+        "2001": "configs/clean.json",
+        "2002": "configs/clean.json",
+        "2003": "configs/i1.json",
+        "2004": "configs/i2.json"
+      }
+    }
+  }
+}

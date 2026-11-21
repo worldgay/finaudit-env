@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "result",
+    "error",
+    "steps_left"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "result": {},
+    "error": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "UNKNOWN_ACTION",
+                "BAD_ARGS",
+                "UNKNOWN_TABLE",
+                "NOT_FOUND",
+                "BAD_CURSOR",
+                "LIMIT_TOO_LARGE",
+                "BAD_EXPRESSION",
+                "EPISODE_DONE",
+                "INVALID_FINDINGS"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
+        }
+      ]
+    },
+    "steps_left": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    }
+  }
+}

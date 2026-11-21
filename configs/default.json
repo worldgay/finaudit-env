@@ -1,0 +1,62 @@
+{
+  "config_version": "1.0",
+  "mode": "train",
+  "size": {
+    "ledger": [
+      200,
+      2000
+    ],
+    "documents": [
+      20,
+      200
+    ]
+  },
+  "base_currency": null,
+  "foreign_currencies": [
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY"
+  ],
+  "timezone": null,
+  "errors": {
+    "DUPLICATE_INVOICE": {
+      "count": [
+        0,
+        2
+      ]
+    },
+    "PAYMENT_ALLOCATION": {
+      "count": [
+        0,
+        2
+      ]
+    },
+    "FX_CONVERSION": {
+      "count": [
+        0,
+        2
+      ]
+    },
+    "PERIOD_CUTOFF": {
+      "count": [
+        0,
+        2
+      ]
+    }
+  },
+  "interactions": {
+    "I1": [
+      0,
+      1
+    ],
+    "I2": [
+      0,
+      1
+    ]
+  },
+  "clean": false,
+  "distractors": {
+    "min_kinds": 3
+  }
+}
