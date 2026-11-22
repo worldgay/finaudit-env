@@ -1,4 +1,4 @@
-"""The organisers' matcher/reward block (docs/CHECKS.md): tests 1-20 and open examples M01-M12.
+"""The organisers' matcher/reward block (docs/CHECKS.txt): tests 1-20 and open examples M01-M12.
 
 Fixture: one issue A of a supported type T, canonical affected record R1, 10000 KZT minor units,
 one admissible evidence set {D1, D2}; tolerance 0 unless stated; inspection_steps 10 by default.

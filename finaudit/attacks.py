@@ -1,4 +1,4 @@
-"""Reward attacks measured on real episodes (train mode, exact numbers for REPORT.md)."""
+"""Reward attacks measured on real episodes (train mode, exact numbers for REPORT.txt)."""
 from __future__ import annotations
 
 import copy

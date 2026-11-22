@@ -1,4 +1,4 @@
-"""Regression tests for failures found by the pre-submission audit (README "Measured failures").
+"""Regression tests for failures found by the pre-submission audit (README.txt, "Измеренные сбои").
 
 Each test reproduces the measured failure; before the fix it crashed or hung, now it must give a bounded result.
 """

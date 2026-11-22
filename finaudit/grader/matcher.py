@@ -1,6 +1,6 @@
 """Normalisation, admissible pairs and maximum bipartite matching (sections 5.2-5.4).
 
-Conventions follow the organisers' check definitions (docs/CHECKS.md, "Точные соглашения matcher"):
+Conventions follow the organisers' check definitions (docs/CHECKS.txt, "Точные соглашения matcher"):
 strings (type, currency, every id) are compared exactly - no case folding, no trimming;
 affected_ids and evidence_ids are sets; the amount tolerance is a fixed non-negative integer per
 finding type published in policy.json (``amount_tolerance_minor``), 0 when absent.

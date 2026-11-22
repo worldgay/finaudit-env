@@ -31,7 +31,7 @@ def test_mini_jury_and_report(tmp_path):
     fails = s["reconciler_failures"]
     assert sum(fails.get("tp", {}).values()) + sum(fails.get("fn", {}).values()) == s["issues_total"]
     md = build(s)
-    assert "| oracle | +1.000 | 1.000 |" in md and "Paired checks" in md and "2/2" in md
+    assert "| oracle | +1.000 | 1.000 |" in md and "Парные проверки" in md and "2/2" in md
 
 
 def test_demo_runs(capsys):

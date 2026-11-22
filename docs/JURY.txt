@@ -1,7 +1,7 @@
 # Памятка для жюри (FinAudit RL environment)
 
 Коротко и по-русски: как запустить среду, подключить её через `judge_adapter.py` и воспроизвести
-проверки из `docs/CHECKS.md`. Подробности на английском — в `README.md` и `DESIGN.md`.
+проверки из `docs/CHECKS.txt`. Подробности — в `README.txt` и `DESIGN.txt`.
 
 ## 1. Запуск
 
@@ -20,7 +20,7 @@ docker run --rm --network none --cpus 2 --memory 4g finaudit make check
   при `--user` тест утечек в отгруженных данных падает с `PermissionError` — так задумано.
 * Только блоки жюри:
   `docker run --rm --network none finaudit python -m pytest -q tests/test_judge_adapter.py tests/test_jury_matcher.py tests/test_hostile_input.py`
-* Имитация закрытой проверки (20 эпизодов × 4 политики, 20 парных, 20 повторов): `make jury`; отчёт — `REPORT.md`.
+* Имитация закрытой проверки (20 эпизодов × 4 политики, 20 парных, 20 повторов): `make jury`; отчёт — `REPORT.txt`.
 * Демо: `docker run --rm --network none finaudit make demo`.
 
 ## 2. Адаптер `judge_adapter.py`
@@ -80,7 +80,7 @@ ja.score_episode("/jury/ep", findings, inspection_steps)    # {"tp","fp","fn","p
 `private/provenance.json` → `injections[]` с `injector = "payment_allocation"`:
 изменение поля `account` (перенос на `SUSPENSE`) — платёж не распределён; все изменения вида `field = "*"`,
 `after = null` (строки удалены) — платёж не проведён; иначе (уменьшены суммы) — частичное распределение.
-Для рецепта D09 при v1.2.0: seed 101 и 104 — SUSPENSE, 102, 107, 108 — не проведён, 103, 105, 106 — частичный.
+Для рецепта D09 (версия данных 1.2.0): seed 101 и 104 — SUSPENSE, 102, 107, 108 — не проведён, 103, 105, 106 — частичный.
 
 ## 4. Независимый пересчёт (блок 2)
 

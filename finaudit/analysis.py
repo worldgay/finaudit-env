@@ -1,4 +1,4 @@
-"""Measured failure analysis of a policy run (used by jury.py / REPORT.md)."""
+"""Measured failure analysis of a policy run (used by jury.py / REPORT.txt)."""
 from __future__ import annotations
 
 import collections

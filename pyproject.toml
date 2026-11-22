@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "finaudit-env"
 version = "1.2.1"
-description = "Reproducible RL environment for an AI financial auditor (synthetic data)"
+description = "Воспроизводимая RL-среда (тренажёр) для ИИ-аудитора финансовой отчётности, синтетические данные"
 requires-python = ">=3.11,<3.12"
 license = {text = "MIT"}
 dependencies = ["tzdata==2024.2"]

@@ -1,5 +1,5 @@
-# All targets delegate to finaudit/tasks.py (the same runner is used as `make`
-# inside the Docker image, where GNU make is not installed).
+# Все цели делегируются finaudit/tasks.py (тот же запуск используется как `make`
+# внутри Docker-образа, где GNU make не установлен).
 PY ?= python3.11
 
 .PHONY: install test episodes trajectories check jury demo report docker-build docker-check

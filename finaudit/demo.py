@@ -117,7 +117,7 @@ def main() -> int:
         r = run_episode_train(ep, name, policy_seed=k)
         say(f"  {name:15s} reward={r['reward']:+.3f} F1={r['f1']:.3f} P={r['precision']:.3f} "
             f"R={r['recall']:.3f} steps={r['steps']}")
-    say("\n== 3. Attacks (see REPORT.md for the 20-episode numbers) ==")
+    say("\n== 3. Attacks (see REPORT.txt for the 20-episode numbers) ==")
     from finaudit.attacks import measure_attacks
     for key, val in measure_attacks([ep]).items():
         say(f"  {key:32s} {val:+.4f}")

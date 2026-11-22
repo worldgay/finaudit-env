@@ -1,5 +1,5 @@
-# Verified on python:3.11-slim@sha256:07d4824036af339fa1b6ef769cc99d9c10a141769538b52b3b597c84f7a7b535
-# (tag kept unpinned on purpose: an offline machine with any cached 3.11-slim can still build).
+# Проверено на python:3.11-slim@sha256:07d4824036af339fa1b6ef769cc99d9c10a141769538b52b3b597c84f7a7b535
+# (тег намеренно не закреплён: офлайн-машина с любым закэшированным 3.11-slim всё равно соберёт образ).
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -11,13 +11,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Offline install of the pinned wheels shipped in vendor/wheels (no network needed).
+# Офлайн-установка зафиксированных wheel-пакетов из vendor/wheels (сеть не нужна).
 COPY requirements.lock requirements-dev.lock ./
 COPY vendor/wheels /tmp/wheels
 RUN pip install --no-cache-dir --no-index --find-links /tmp/wheels \
         -r requirements.lock -r requirements-dev.lock && rm -rf /tmp/wheels
 
-# Separate users: the environment/grader server and the agent never share files.
+# Отдельные пользователи: сервер среды/оценщика и агент никогда не делят файлы.
 RUN groupadd --system grader && useradd --system --gid grader --no-create-home grader \
  && groupadd --system agent && useradd --system --gid agent --no-create-home agent \
  && printf '#!/bin/sh\nexec python -m finaudit.tasks "$@"\n' > /usr/local/bin/make \

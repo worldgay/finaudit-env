@@ -1,4 +1,4 @@
-"""judge_adapter.py - the organisers' single connection point (docs/CHECKS.md, "Единый способ подключения").
+"""judge_adapter.py - the organisers' single connection point (docs/CHECKS.txt, "Единый способ подключения").
 
 A thin translation layer over the existing environment; it changes no task semantics:
 
