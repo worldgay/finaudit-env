@@ -53,5 +53,5 @@
   "distractors": {
     "min_kinds": 3
   },
-  "description": "scenario I1 (foreign partial payment at the period boundary) plus up to one error of each type"
+  "description": "сценарий I1 (частичная оплата в иностранной валюте на границе периода) плюс до одной ошибки каждого типа"
 }

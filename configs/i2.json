@@ -53,5 +53,5 @@
   "distractors": {
     "min_kinds": 3
   },
-  "description": "scenario I2 (duplicate with split payment) plus up to one error of each type"
+  "description": "сценарий I2 (дубль с разнесённой оплатой) плюс до одной ошибки каждого типа"
 }

@@ -1,2 +1,2 @@
-# Byte-exact files on every OS: episodes carry sha256 of their files, scripts run in Linux.
+# Файлы побайтово одинаковы на любой ОС: эпизоды хранят sha256 своих файлов, скрипты работают в Linux.
 * -text

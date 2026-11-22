@@ -1,6 +1,6 @@
 {
   "config_version": "1.0",
-  "description": "Shipped dataset: 10 train + 10 dev episodes",
+  "description": "Сдаваемый набор: 10 train + 10 dev эпизодов",
   "sets": {
     "train": {
       "config": "configs/train.json",

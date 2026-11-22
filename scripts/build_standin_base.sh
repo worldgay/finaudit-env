@@ -1,7 +1,7 @@
 #!/bin/sh
-# Build a LOCAL stand-in for python:3.11-slim from the host's python3.11 (Ubuntu/Debian host).
-# Only needed where Docker Hub is unreachable (that was the case in the CI sandbox used to build
-# this repository). With registry access, `docker build` pulls the real python:3.11-slim instead.
+# Собирает ЛОКАЛЬНУЮ замену образа python:3.11-slim из python3.11 хоста (хост Ubuntu/Debian).
+# Нужно только там, где Docker Hub недоступен. При доступе к реестру `docker build`
+# скачивает настоящий python:3.11-slim.
 set -e
 R=$(mktemp -d)
 mkdir -p $R/bin $R/usr/local/bin $R/etc $R/tmp $R/root $R/var/tmp $R/proc $R/sys $R/dev

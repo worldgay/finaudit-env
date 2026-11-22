@@ -1,6 +1,6 @@
 {
   "config_version": "1.0",
-  "description": "Simulated closed jury check: 20 fresh episodes x 4 policies in eval mode, 20 paired transforms, 20 replays",
+  "description": "Симуляция закрытой проверки жюри: 20 новых эпизодов x 4 политики в режиме eval, 20 парных преобразований, 20 повторов",
   "groups": [
     {
       "name": "clean",
