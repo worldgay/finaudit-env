@@ -112,16 +112,16 @@ def main() -> int:
     ep = generate_to_dir(SEED, cfg, tmp)
     say("== 1. Скриптовый аудитор на эпизоде I1 (FX + частичное распределение на границе периода) ==")
     scripted_audit(ep)
-    say("\n== 2. The four baseline policies on the same episode (train mode) ==")
+    say("\n== 2. Четыре базовые политики на том же эпизоде (режим train) ==")
     for k, name in enumerate(POLICIES):
         r = run_episode_train(ep, name, policy_seed=k)
         say(f"  {name:15s} награда={r['reward']:+.3f} F1={r['f1']:.3f} P={r['precision']:.3f} "
             f"R={r['recall']:.3f} шагов={r['steps']}")
-    say("\n== 3. Attacks (see REPORT.txt for the 20-episode numbers) ==")
+    say("\n== 3. Атаки на награду (числа по 20 эпизодам — в REPORT.txt) ==")
     from finaudit.attacks import measure_attacks
     for key, val in measure_attacks([ep]).items():
         say(f"  {key:32s} {val:+.4f}")
-    say("\n== 4. Shuffle + rename every id; replay the same seed ==")
+    say("\n== 4. Перемешивание + переименование всех ID; повтор того же seed ==")
     moved = transform(ep, 1, tmp / "t")
     a, b = run_episode_train(ep, "oracle"), run_episode_train(moved, "oracle")
     say(f"  награда oracle: исходный={a['reward']} преобразованный={b['reward']} ({ep.name} -> {moved.name})")
