@@ -1,4 +1,4 @@
-"""`make episodes`: generate the shipped dataset (10 train + 10 dev) from configs/dataset.json."""
+"""`make episodes`: генерирует сдаваемый набор (10 train + 10 dev) по configs/dataset.json."""
 from __future__ import annotations
 
 import json
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def build_dataset(spec_path: Path = ROOT / "configs" / "dataset.json", out: Path = ROOT / "episodes") -> list[str]:
-    """(Re)generate every split; returns a list of 'split/episode_id' names."""
+    """(Пере)генерирует каждый сплит; возвращает список имён 'split/episode_id'."""
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
     made = []
     for split, info in spec["sets"].items():
@@ -32,9 +32,9 @@ def build_dataset(spec_path: Path = ROOT / "configs" / "dataset.json", out: Path
 
 
 def main() -> int:
-    """CLI entry point."""
+    """Точка входа CLI."""
     made = build_dataset()
-    sys.stdout.write(f"episodes: {len(made)} written and verified\n")
+    sys.stdout.write(f"episodes: {len(made)} записано и проверено\n")
     return 0
 
 

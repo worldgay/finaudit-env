@@ -1,4 +1,4 @@
-"""verify catches deliberately broken truth / public data."""
+"""verify ловит намеренно испорченные truth / открытые данные."""
 import json
 
 import pytest

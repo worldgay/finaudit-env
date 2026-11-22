@@ -73,7 +73,7 @@ def test_superset_evidence_ok_but_unknown_id_fails():
 
 
 def test_maximum_not_greedy_matching():
-    # f0 fits both issues; f1 fits only i1. Greedy f0->i1 would leave f1 unmatched.
+    # f0 подходит обеим ошибкам; f1 подходит только i1. Жадный f0->i1 оставил бы f1 без пары.
     tol = tolerances({"amount_tolerance_minor": {"DUPLICATE_INVOICE": 30}})
     i1 = issue("i1", amount=100000)
     i2 = issue("i2", amount=100050)

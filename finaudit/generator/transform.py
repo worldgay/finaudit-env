@@ -1,7 +1,7 @@
-"""transform(episode_dir, perm_seed, out_dir): shuffle every table and rename every id.
+"""transform(episode_dir, perm_seed, out_dir): перемешивает все таблицы и переименовывает все ID.
 
-The result is the same accounting problem with different surface form: oracle reward and the
-set of issues must be preserved (paired check)."""
+Результат — та же бухгалтерская задача в другой внешней форме: награда oracle и
+множество ошибок должны сохраниться (парная проверка)."""
 from __future__ import annotations
 
 import copy
@@ -52,7 +52,7 @@ def _remap(rec: dict, mapping: dict[str, str]) -> dict:
 
 
 def _remap_json(obj: object, mapping: dict[str, str]) -> object:
-    """Replace every string value found in ``mapping`` (dict keys are kept)."""
+    """Заменяет каждое строковое значение, найденное в ``mapping`` (ключи словарей сохраняются)."""
     if isinstance(obj, str):
         return mapping.get(obj, obj)
     if isinstance(obj, list):
@@ -75,7 +75,7 @@ def _remap_truth(truth: dict, mapping: dict[str, str], eid: str, rng: random.Ran
 
 
 def transform_files(files: dict[str, str], perm_seed: int) -> tuple[dict[str, str], dict[str, str]]:
-    """Return (new files, old->new id mapping incl. the episode id)."""
+    """Возвращает (новые файлы, отображение старый->новый ID, включая ID эпизода)."""
     pub = parse_public(files)
     truth = json.loads(files["private/truth.json"])
     old_eid = pub["manifest"]["episode_id"]
@@ -109,7 +109,7 @@ def transform_files(files: dict[str, str], perm_seed: int) -> tuple[dict[str, st
 
 
 def transform(episode_dir: str | Path, perm_seed: int, out_dir: str | Path) -> Path:
-    """Write the transformed episode to ``out_dir/<new episode id>`` and return that path."""
+    """Записывает преобразованный эпизод в ``out_dir/<новый ID эпизода>`` и возвращает этот путь."""
     files, mapping = transform_files(read_files(episode_dir), perm_seed)
     eid = json.loads(files["public/manifest.json"])["episode_id"]
     return write_files(files, Path(out_dir) / eid)

@@ -1,4 +1,4 @@
-"""I1 and I2: two causally linked issues each, amounts after both changes, order in provenance."""
+"""I1 и I2: по две причинно связанные ошибки, суммы после обоих изменений, порядок в provenance."""
 import json
 
 from conftest import SMALL
@@ -32,7 +32,7 @@ def test_i1():
         order = {p["issue_id"]: p["order"] for p in prov["injections"]}
         assert order[fx["issue_id"]] < order[alloc["issue_id"]]
         rows = [r for r in pub["ledger"] if r["payment_id"] == pid]
-        assert set(alloc["evidence_sets"][0]) >= {r["row_id"] for r in rows}  # evidence after both changes
+        assert set(alloc["evidence_sets"][0]) >= {r["row_id"] for r in rows}  # доказательства после обоих изменений
 
 
 def test_i2():

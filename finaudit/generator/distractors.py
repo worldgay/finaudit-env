@@ -1,4 +1,4 @@
-"""Correct-but-tricky cases that break naive audit rules (never real errors)."""
+"""Корректные, но коварные случаи, ломающие наивные правила аудита (никогда не настоящие ошибки)."""
 from __future__ import annotations
 
 import random
@@ -19,7 +19,7 @@ def _pick_currency(w: World, rng: random.Random, foreign_bias: float = 0.55) -> 
 
 
 def add_split(w: World, rng: random.Random, ids: IdFactory) -> None:
-    """One foreign invoice paid by 2-3 payments (all correct)."""
+    """Один иностранный счёт, оплаченный 2-3 платежами (всё корректно)."""
     cur = rng.choice(w.foreign)
     ent = rng.choice(w.entities_of("customer"))
     inv_m = random_moment(w, rng, 1, w.last_day() - 6)
@@ -28,7 +28,7 @@ def add_split(w: World, rng: random.Random, ids: IdFactory) -> None:
     total, k = inv["total_minor"], rng.randint(2, 3)
     ratio_rate = w.rate(cur, inv_m.date())
     parts: list[int] = []
-    for _ in range(60):  # prefer parts whose rounding differs by one unit from the whole
+    for _ in range(60):  # предпочитаем части, чьё округление отличается от целого на одну единицу
         cuts = sorted(rng.sample(range(1, total), k - 1))
         parts = [b - a for a, b in zip([0] + cuts, cuts + [total])]
         conv_sum = sum(convert(p, w.exp(cur), ratio_rate, w.exp(w.base)) for p in parts)
@@ -42,7 +42,7 @@ def add_split(w: World, rng: random.Random, ids: IdFactory) -> None:
 
 
 def add_multi(w: World, rng: random.Random, ids: IdFactory) -> None:
-    """One payment that settles 2-3 invoices of the same counterparty."""
+    """Один платёж, закрывающий 2-3 счёта одного контрагента."""
     direction = rng.choice(["receivable", "payable"])
     role = "customer" if direction == "receivable" else "supplier"
     ent, cur = rng.choice(w.entities_of(role)), _pick_currency(w, rng)
@@ -56,7 +56,7 @@ def add_multi(w: World, rng: random.Random, ids: IdFactory) -> None:
 
 
 def add_refund(w: World, rng: random.Random, ids: IdFactory) -> None:
-    """Customer overpays an invoice and later receives a refund (negative payment)."""
+    """Покупатель переплачивает по счёту и позже получает возврат (отрицательный платёж)."""
     ent, cur = rng.choice(w.entities_of("customer")), _pick_currency(w, rng)
     inv_m = random_moment(w, rng, 1, w.last_day() - 4)
     inv = add_invoice(w, rng, ids, direction="receivable", entity=ent, currency=cur, moment=inv_m,
@@ -71,7 +71,7 @@ def add_refund(w: World, rng: random.Random, ids: IdFactory) -> None:
 
 
 def add_weekly(w: World, rng: random.Random, ids: IdFactory) -> None:
-    """Weekly service: same counterparty and amount every 7 days, different week label."""
+    """Еженедельная услуга: тот же контрагент и сумма каждые 7 дней, разная метка недели."""
     ent, cur = rng.choice(w.entities_of("customer")), _pick_currency(w, rng)
     n = 4 if w.last_day() >= 23 and rng.random() < 0.5 else 3
     start = rng.randint(1, w.last_day() - 7 * (n - 1))
@@ -90,7 +90,7 @@ def add_weekly(w: World, rng: random.Random, ids: IdFactory) -> None:
 
 
 def add_boundary(w: World, rng: random.Random, ids: IdFactory) -> bool:
-    """A posted in-period document whose +00:00 rendering shows an out-of-period date."""
+    """Проведённый документ периода, чья запись в +00:00 показывает дату вне периода."""
     late = make_local(w.period_end, 23, rng.choice([30, 40, 50]), w.tz)
     early = make_local(w.period_start, 0, rng.choice([10, 20, 30]), w.tz)
     if offset_minutes(late) < 0:
@@ -108,7 +108,7 @@ def add_boundary(w: World, rng: random.Random, ids: IdFactory) -> bool:
 
 
 def add_next_month(w: World, rng: random.Random, ids: IdFactory, n: int) -> None:
-    """Invoices issued in the first days of the next month (must stay unposted)."""
+    """Счета, выставленные в первые дни следующего месяца (должны остаться непроведёнными)."""
     for k in range(n):
         direction = rng.choice(["receivable", "payable"])
         role = "customer" if direction == "receivable" else "supplier"
@@ -124,7 +124,7 @@ def add_next_month(w: World, rng: random.Random, ids: IdFactory, n: int) -> None
 
 
 def detect_natural(w: World, rows: list[dict]) -> None:
-    """Register naturally occurring kinds (FX gain/loss lines, 1-unit rounding residue)."""
+    """Регистрирует естественно возникающие виды (строки FX gain/loss, остаток округления в 1 единицу)."""
     if any(r["account"] == "FX_GAIN_LOSS" for r in rows):
         w.distractors.append("fx_gain_loss")
     for inv in w.invoices:

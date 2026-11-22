@@ -1,4 +1,4 @@
-"""Eval-mode isolation: separate processes, no reward to the agent, private files unreadable."""
+"""Изоляция режима eval: отдельные процессы, награда агенту не передаётся, закрытые файлы нечитаемы."""
 import json
 import subprocess
 import sys

@@ -1,4 +1,4 @@
-"""FinAuditEnv: Gymnasium-style reset/step over one audit episode (JSON in, JSON out)."""
+"""FinAuditEnv: reset/step в стиле Gymnasium над одним эпизодом аудита (JSON на входе и выходе)."""
 from __future__ import annotations
 
 import json
@@ -17,13 +17,13 @@ from finaudit.util.canon import dumps
 
 MAX_STEPS = 100
 TASK_TEXT = (
-    "You are auditing one company for one calendar month. The ledger (base currency, integer minor "
-    "units), invoices, payments and daily FX rates are available through the tools. Find bookkeeping "
-    "discrepancies of the listed finding types and submit them once with action 'submit'. Each finding "
-    "names the affected invoice_id/payment_id values, the amount in minor units in the currency fixed "
-    "for its type (see policy.finding_currency_by_type), and evidence_ids: record ids (ledger row_id, "
-    "document doc_id, fx id 'fx:DATE:SRC:TGT') that together prove it. Every step costs 0.002 reward; "
-    "you have 100 steps including submit."
+    "Вы проводите аудит одной компании за один календарный месяц. Через инструменты доступны ledger "
+    "(базовая валюта, целые минимальные единицы), счета (invoices), платежи (payments) и дневные курсы FX. "
+    "Найдите бухгалтерские расхождения перечисленных типов выводов и отправьте их один раз действием "
+    "'submit'. Каждый вывод называет затронутые значения invoice_id/payment_id, сумму в минимальных единицах "
+    "в валюте, закреплённой за его типом (см. policy.finding_currency_by_type), и evidence_ids: ID записей "
+    "(row_id строки ledger, doc_id документа, fx-ID 'fx:DATE:SRC:TGT'), которые вместе его доказывают. "
+    "Каждый шаг стоит 0.002 награды; у вас 100 шагов, включая submit."
 )
 
 
@@ -34,18 +34,18 @@ def _obs(result: object = None, error: EnvError | None = None, steps_left: int =
 
 
 class FinAuditEnv:
-    """One environment instance; ``reset`` fully replaces all episode state."""
+    """Один экземпляр среды; ``reset`` полностью заменяет всё состояние эпизода."""
 
     def __init__(self, grader_log: str | Path | None = None) -> None:
         self.grader_log = Path(grader_log) if grader_log else None
         self.policy_name = "unknown"
         self._loaded = False
 
-    # ------------------------------------------------------------------ lifecycle
+    # ------------------------------------------------------------------ жизненный цикл
     def reset(self, seed: int | None = 0, config: dict | None = None) -> tuple[dict, dict]:
-        """Start an episode from ``config['episode_dir']`` or generate one from (seed, config).
+        """Начинает эпизод из ``config['episode_dir']`` или генерирует его из (seed, config).
 
-        ``seed=None`` means seed 0 (the environment never draws entropy from the OS).
+        ``seed=None`` означает seed 0 (среда никогда не берёт энтропию у ОС).
         """
         config = dict(config or {})
         seed = 0 if seed is None else int(seed)
@@ -60,7 +60,7 @@ class FinAuditEnv:
         public = parse_public(files)
         if "private/truth.json" in files:
             self.truth = json.loads(files["private/truth.json"])
-        elif self.mode == "eval":  # closed run graded outside (judge_adapter.score_episode): reward is 0 anyway
+        elif self.mode == "eval":  # закрытый прогон оценивается снаружи (judge_adapter.score_episode): награда всё равно 0
             self.truth = {"episode_id": public["manifest"]["episode_id"], "issues": []}
         else:
             raise ValueError("train mode needs private/truth.json in episode_dir")
@@ -83,48 +83,48 @@ class FinAuditEnv:
 
     @property
     def steps_left(self) -> int:
-        """Remaining step budget."""
+        """Оставшийся бюджет шагов."""
         return MAX_STEPS - self.steps_used
 
-    # ------------------------------------------------------------------ step
+    # ------------------------------------------------------------------ шаг
     def step(self, action: object) -> tuple[dict, float, bool, bool, dict]:
-        """Apply one action; every call before the end consumes one step."""
+        """Применяет одно действие; каждый вызов до завершения расходует один шаг."""
         if not self._loaded:
             raise RuntimeError("call reset() first")
         if self.done:
-            err = EnvError("EPISODE_DONE", "episode has finished")
+            err = EnvError("EPISODE_DONE", "эпизод завершён")
             return _obs(error=err, steps_left=self.steps_left), 0.0, *self.flags, self._info(None)
         self.steps_used += 1
         try:
             if not isinstance(action, dict):
-                raise EnvError("BAD_ARGS", "action must be a JSON object")
+                raise EnvError("BAD_ARGS", "действие должно быть JSON-объектом")
             name = check_keys(action)
             if name == "submit":
                 return self._submit(action["findings"])
             obs = _obs(HANDLERS[name](self.store, action), steps_left=self.steps_left)
         except EnvError as err:
             obs = _obs(error=err, steps_left=self.steps_left)
-        except Exception:  # hostile input must never crash the env: bounded error, step still counted
-            obs = _obs(error=EnvError("BAD_ARGS", "action could not be processed"), steps_left=self.steps_left)
+        except Exception:  # враждебный ввод не должен ронять среду: ограниченная ошибка, шаг всё равно засчитан
+            obs = _obs(error=EnvError("BAD_ARGS", "действие не удалось обработать"), steps_left=self.steps_left)
         if self.steps_used >= MAX_STEPS:
             return self._finish(obs, empty_findings(self.truth["episode_id"]), truncated=True)
         return obs, 0.0, False, False, self._info(None)
 
     def force_truncate(self) -> tuple[dict, float, bool, bool, dict]:
-        """Wall-clock limit reached (called by the runner): grade the empty answer."""
+        """Достигнут лимит реального времени (вызывает runner): оценивается пустой ответ."""
         if self.done:
-            err = EnvError("EPISODE_DONE", "episode has finished")
+            err = EnvError("EPISODE_DONE", "эпизод завершён")
             return _obs(error=err, steps_left=self.steps_left), 0.0, *self.flags, self._info(None)
-        obs = _obs(error=EnvError("EPISODE_DONE", "time limit reached"), steps_left=self.steps_left)
+        obs = _obs(error=EnvError("EPISODE_DONE", "достигнут лимит времени"), steps_left=self.steps_left)
         return self._finish(obs, empty_findings(self.truth["episode_id"]), truncated=True)
 
-    # ------------------------------------------------------------------ internals
+    # ------------------------------------------------------------------ внутреннее
     def _submit(self, findings: object) -> tuple[dict, float, bool, bool, dict]:
         inspection = self.steps_used - 1
         result = grade(self.truth, findings, self.store.ids, inspection, self.tol)
         if not result.valid:
-            msg = result.reason if self.mode == "train" else "findings structure rejected"
-            obs = _obs(error=EnvError("INVALID_FINDINGS", f"findings rejected: {msg}"),
+            msg = result.reason if self.mode == "train" else "структура findings отклонена"
+            obs = _obs(error=EnvError("INVALID_FINDINGS", f"findings отклонены: {msg}"),
                        steps_left=self.steps_left)
         else:
             n = len(findings["findings"])  # type: ignore[index]

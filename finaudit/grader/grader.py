@@ -10,7 +10,7 @@ from finaudit.grader.validate_findings import validate_findings
 
 @dataclass(frozen=True)
 class GradeResult:
-    """Outcome of grading one submission."""
+    """Результат оценки одной отправки."""
 
     valid: bool
     reason: str | None
@@ -25,27 +25,27 @@ class GradeResult:
     matches: tuple[tuple[int, str], ...]
 
     def to_dict(self) -> dict:
-        """JSON form."""
+        """Форма JSON."""
         d = asdict(self)
         d["matches"] = [list(m) for m in self.matches]
         return d
 
     def agent_info(self) -> dict:
-        """The train-mode info dict (section 4.4)."""
+        """Словарь info режима train (раздел 4.4)."""
         return {"precision": self.precision, "recall": self.recall, "f1": self.f1, "tp": self.tp,
                 "fp": self.fp, "fn": self.fn, "inspection_steps": self.inspection_steps}
 
 
 def empty_findings(episode_id: str) -> dict:
-    """The answer graded on truncation."""
+    """Ответ, оцениваемый при обрезке эпизода."""
     return {"episode_id": episode_id, "findings": []}
 
 
 def grade(truth: dict, findings: object, public_ids: set[str] | frozenset[str],
           inspection_steps: int, tol: dict[str, int] | None = None) -> GradeResult:
-    """Validate, match and score a submission against truth.
+    """Проверяет, сопоставляет и оценивает отправку относительно truth.
 
-    ``tol`` is the per-type amount tolerance (``matcher.tolerances(policy)``); ``None`` means 0.
+    ``tol`` — допуск суммы по типам (``matcher.tolerances(policy)``); ``None`` означает 0.
     """
     issues = truth["issues"]
     reason = validate_findings(findings, truth["episode_id"])

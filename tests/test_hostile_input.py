@@ -1,6 +1,6 @@
-"""Regression tests for failures found by the pre-submission audit (README.txt, "Измеренные сбои").
+"""Регрессионные тесты на сбои, найденные проверкой перед сдачей (README.txt, "Измеренные сбои").
 
-Each test reproduces the measured failure; before the fix it crashed or hung, now it must give a bounded result.
+Каждый тест воспроизводит измеренный сбой; до исправления он падал или зависал, теперь должен давать ограниченный результат.
 """
 import base64
 import json
@@ -29,7 +29,7 @@ def _closed(ep):
 
 
 def test_deeply_nested_cursor_is_bad_cursor_not_a_crash(ep):
-    # Was: RecursionError escaped JudgeEnv.step into the caller's harness.
+    # Было: RecursionError выходил из JudgeEnv.step в обвязку вызывающего.
     env = _closed(ep)
     cursor = base64.urlsafe_b64encode(b"[" * 100_000).decode().rstrip("=")
     obs, reward, term, trunc, info = env.step({"name": "list_records",
@@ -66,12 +66,12 @@ def test_closed_reset_without_truth(ep, tmp_path):
 
 
 @pytest.mark.parametrize("script", [
-    # partial line without newline, then silence: readline() used to block forever
+    # неполная строка без перевода строки, затем тишина: readline() раньше блокировался навсегда
     "import sys,time; sys.stdout.write('{'); sys.stdout.flush(); time.sleep(30)",
-    # flood of actions while never reading stdin: the runner's write used to block forever
+    # поток действий без чтения stdin: запись runner раньше блокировалась навсегда
     "import sys,time\nfor _ in range(2000): sys.stdout.write('{\"action\":\"list_records\",\"table\":\"ledger\"}\\n')\n"
     "sys.stdout.flush(); time.sleep(30)",
-    # deeply nested JSON line: json.loads raised RecursionError and aborted the episode
+    # глубоко вложенная JSON-строка: json.loads выбрасывал RecursionError и обрывал эпизод
     "import sys,time; sys.stdout.write('['*100000+'\\n'); sys.stdout.flush(); time.sleep(30)",
 ])
 def test_runner_survives_hostile_agent(err_dir, tmp_path, monkeypatch, script):
@@ -79,6 +79,6 @@ def test_runner_survives_hostile_agent(err_dir, tmp_path, monkeypatch, script):
     monkeypatch.setattr(runner, "_spawn_agent", lambda *a, **k: subprocess.Popen(
         [sys.executable, "-c", script], stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0))
     res = runner.run_episode_eval(err_dir, "reconciler", tmp_path, max_seconds=2.0)
-    assert res["seconds"] < 10 and "tp" in res  # finished and graded instead of hanging
+    assert res["seconds"] < 10 and "tp" in res  # завершён и оценён, а не завис
     lines = (tmp_path / "trajectories.jsonl").read_text().splitlines()
     assert lines and all(json.loads(x)["reward"] == 0.0 for x in lines)

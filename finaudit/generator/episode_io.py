@@ -1,4 +1,4 @@
-"""Reading and writing episode directories."""
+"""Чтение и запись каталогов эпизодов."""
 from __future__ import annotations
 
 import json
@@ -11,7 +11,7 @@ PRIVATE = ("truth.json", "provenance.json", "generation.json")
 
 
 def write_files(files: dict[str, str], out_dir: str | Path) -> Path:
-    """Write ``files`` (relative path -> text) under ``out_dir``."""
+    """Записывает ``files`` (относительный путь -> текст) в ``out_dir``."""
     root = Path(out_dir)
     for rel, text in files.items():
         path = root / rel
@@ -21,14 +21,14 @@ def write_files(files: dict[str, str], out_dir: str | Path) -> Path:
 
 
 def read_files(episode_dir: str | Path, private: bool = True) -> dict[str, str]:
-    """Read an episode directory into a relative path -> text mapping."""
+    """Читает каталог эпизода в словарь относительный путь -> текст."""
     root = Path(episode_dir)
     names = [f"public/{n}" for n in PUBLIC] + ([f"private/{n}" for n in PRIVATE] if private else [])
     return {n: (root / n).read_text(encoding="utf-8") for n in names if (root / n).exists()}
 
 
 def parse_public(files: dict[str, str]) -> dict:
-    """Parse the six public files into Python structures."""
+    """Разбирает шесть открытых файлов в структуры Python."""
     return {"manifest": json.loads(files["public/manifest.json"]),
             "policy": json.loads(files["public/policy.json"]),
             "ledger": parse_ledger(files["public/ledger.csv"]),
@@ -38,7 +38,7 @@ def parse_public(files: dict[str, str]) -> dict:
 
 
 def public_ids(public: dict) -> set[str]:
-    """Every record id an agent can fetch: row_id, doc_id and fx ids."""
+    """Все ID записей, которые может получить агент: row_id, doc_id и fx-ID."""
     ids = {r["row_id"] for r in public["ledger"]}
     ids.update(i["doc_id"] for i in public["invoices"])
     ids.update(p["doc_id"] for p in public["payments"])

@@ -1,4 +1,4 @@
-"""EnvError: the only exception type turned into an error observation."""
+"""EnvError: единственный тип исключения, превращаемый в observation с ошибкой."""
 from __future__ import annotations
 
 ERROR_CODES = ("UNKNOWN_ACTION", "BAD_ARGS", "UNKNOWN_TABLE", "NOT_FOUND", "BAD_CURSOR",
@@ -6,7 +6,7 @@ ERROR_CODES = ("UNKNOWN_ACTION", "BAD_ARGS", "UNKNOWN_TABLE", "NOT_FOUND", "BAD_
 
 
 class EnvError(Exception):
-    """Agent-facing error with a code from the closed list and a short message."""
+    """Ошибка для агента: код из закрытого списка и короткое сообщение."""
 
     def __init__(self, code: str, message: str) -> None:
         if code not in ERROR_CODES:

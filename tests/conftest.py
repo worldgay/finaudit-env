@@ -1,4 +1,4 @@
-"""Shared pytest fixtures."""
+"""Общие фикстуры pytest."""
 from __future__ import annotations
 
 import os
@@ -17,26 +17,26 @@ SMALL = {"size": {"ledger": [200, 320], "documents": [20, 60]},
 
 
 def in_docker() -> bool:
-    """True inside the project Docker image running as root."""
+    """True внутри Docker-образа проекта при запуске от root."""
     return os.environ.get("FINAUDIT_DOCKER") == "1" and hasattr(os, "geteuid") and os.geteuid() == 0
 
 
 @pytest.fixture
 def small_config() -> dict:
-    """A small config for fast tests."""
+    """Небольшой config для быстрых тестов."""
     import copy
     return copy.deepcopy(SMALL)
 
 
 def burn(env, n: int) -> None:
-    """Spend ``n`` steps with harmless calculator calls."""
+    """Тратит ``n`` шагов безвредными вызовами калькулятора."""
     for _ in range(n):
         env.step({"action": "calculator", "expression": "1+1"})
 
 
 @pytest.fixture(scope="session")
 def episodes_root(tmp_path_factory) -> Path:
-    """A few small episodes written to disk once per session."""
+    """Несколько небольших эпизодов, записываемых на диск один раз за сессию."""
     from finaudit.generator.generate import generate_to_dir
     root = tmp_path_factory.mktemp("episodes")
     generate_to_dir(7, {**SMALL, "interactions": {"I1": 1, "I2": 1}}, root / "err")
@@ -50,19 +50,19 @@ def _only_child(path: Path) -> Path:
 
 @pytest.fixture(scope="session")
 def err_dir(episodes_root) -> Path:
-    """Episode directory with errors (incl. I1 and I2)."""
+    """Каталог эпизода с ошибками (включая I1 и I2)."""
     return _only_child(episodes_root / "err")
 
 
 @pytest.fixture(scope="session")
 def clean_dir(episodes_root) -> Path:
-    """Clean episode directory (no errors)."""
+    """Каталог чистого эпизода (без ошибок)."""
     return _only_child(episodes_root / "clean")
 
 
 @pytest.fixture
 def env_err(err_dir):
-    """Train-mode env reset on the error episode."""
+    """Среда в режиме train после reset на эпизоде с ошибками."""
     from finaudit.env.core import FinAuditEnv
     env = FinAuditEnv()
     obs, _ = env.reset(0, {"episode_dir": str(err_dir), "mode": "train"})
@@ -72,7 +72,7 @@ def env_err(err_dir):
 
 @pytest.fixture
 def env_clean(clean_dir):
-    """Train-mode env reset on the clean episode."""
+    """Среда в режиме train после reset на чистом эпизоде."""
     from finaudit.env.core import FinAuditEnv
     env = FinAuditEnv()
     obs, _ = env.reset(0, {"episode_dir": str(clean_dir), "mode": "train"})

@@ -1,4 +1,4 @@
-"""Parsing and rendering of the public table formats (shared, stdlib only)."""
+"""Разбор и рендер форматов открытых таблиц (общий код, только stdlib)."""
 from __future__ import annotations
 
 import csv
@@ -14,7 +14,7 @@ _INT_COLUMNS = {"debit_minor", "credit_minor"}
 
 
 def render_csv(columns: list[str], rows: list[dict]) -> str:
-    """Render rows as CSV; ``None`` becomes an empty cell."""
+    """Рендерит строки как CSV; ``None`` становится пустой ячейкой."""
     buf = io.StringIO()
     writer = csv.writer(buf, lineterminator="\n")
     writer.writerow(columns)
@@ -24,12 +24,12 @@ def render_csv(columns: list[str], rows: list[dict]) -> str:
 
 
 def render_jsonl(rows: list[dict]) -> str:
-    """Render rows as canonical JSON lines."""
+    """Рендерит строки как канонические JSON-строки."""
     return "".join(dumps(r) + "\n" for r in rows)
 
 
 def parse_ledger(text: str) -> list[dict]:
-    """Parse ledger.csv: empty cell -> None, money columns -> int."""
+    """Разбирает ledger.csv: пустая ячейка -> None, денежные столбцы -> int."""
     out = []
     for raw in csv.DictReader(io.StringIO(text)):
         row: dict = {}
@@ -46,15 +46,15 @@ def parse_ledger(text: str) -> list[dict]:
 
 
 def parse_fx(text: str) -> list[dict]:
-    """Parse fx.csv rows (rate stays a decimal string)."""
+    """Разбирает строки fx.csv (курс остаётся десятичной строкой)."""
     return [dict(r) for r in csv.DictReader(io.StringIO(text))]
 
 
 def fx_id(row: dict) -> str:
-    """Return the public identifier of an fx row: ``fx:YYYY-MM-DD:SRC:TGT``."""
+    """Возвращает открытый идентификатор строки fx: ``fx:YYYY-MM-DD:SRC:TGT``."""
     return f"fx:{row['date']}:{row['source_currency']}:{row['target_currency']}"
 
 
 def parse_jsonl(text: str) -> list[dict]:
-    """Parse JSON lines."""
+    """Разбирает JSON-строки."""
     return [json.loads(line) for line in text.splitlines() if line.strip()]

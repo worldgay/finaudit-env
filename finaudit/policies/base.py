@@ -1,4 +1,4 @@
-"""Policy interface and the stdin/stdout agent loop used in eval mode."""
+"""Интерфейс политики и цикл агента через stdin/stdout, используемый в режиме eval."""
 from __future__ import annotations
 
 import json
@@ -9,32 +9,32 @@ from finaudit.util.canon import dumps
 
 
 class Policy(Protocol):
-    """A policy sees only observations and returns actions."""
+    """Политика видит только observations и возвращает действия."""
 
     name: str
 
     def reset(self, observation: dict) -> None:
-        """Receive the first observation of an episode."""
+        """Получает первое observation эпизода."""
 
     def act(self, observation: dict) -> dict:
-        """Return the next action."""
+        """Возвращает следующее действие."""
 
 
 def empty_submit(episode_id: str) -> dict:
-    """A submit action with no findings."""
+    """Действие submit без выводов."""
     return {"action": "submit", "findings": {"episode_id": episode_id, "findings": []}}
 
 
 def finding(typ: str, affected: list[str], amount: int, currency: str, evidence: list[str],
             explanation: str = "") -> dict:
-    """Build one finding dict."""
+    """Собирает словарь одного вывода."""
     return {"type": typ, "affected_ids": sorted(set(affected)), "claimed_amount_minor": int(amount),
             "currency": currency, "evidence_ids": sorted(set(evidence))[:10],
             "explanation": explanation[:1000]}
 
 
 def run_stdio(policy: Policy) -> int:
-    """Agent process loop: read one observation per line, write one action per line."""
+    """Цикл процесса агента: читает одно observation на строку, пишет одно действие на строку."""
     first = True
     for line in sys.stdin:
         obs = json.loads(line)

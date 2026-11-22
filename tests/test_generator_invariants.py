@@ -1,4 +1,4 @@
-"""Clean-book invariants and verify on 1000 seeds (small size for speed)."""
+"""Инварианты чистых книг и verify на 1000 seed (малый размер для скорости)."""
 import json
 
 from conftest import SMALL

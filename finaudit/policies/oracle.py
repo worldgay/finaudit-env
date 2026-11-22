@@ -1,4 +1,4 @@
-"""Oracle (grader-only): reads truth and submits every issue with its first evidence set."""
+"""Oracle (только для оценщика): читает truth и отправляет каждую ошибку с её первым набором доказательств."""
 from __future__ import annotations
 
 from finaudit.policies.base import finding
@@ -7,7 +7,7 @@ GRADER_ONLY = True
 
 
 class OraclePolicy:
-    """Upper bound; must never run as an agent process (it needs truth.json)."""
+    """Верхняя граница; никогда не должен работать как процесс агента (ему нужен truth.json)."""
 
     name = "oracle"
 
@@ -16,15 +16,15 @@ class OraclePolicy:
         self.duplicate = duplicate
 
     def reset(self, observation: dict) -> None:
-        """Nothing to prepare."""
+        """Готовить нечего."""
 
     def findings(self) -> list[dict]:
-        """One finding per truth issue (twice when ``duplicate``)."""
+        """Один вывод на ошибку truth (два при ``duplicate``)."""
         out = [finding(i["type"], i["affected_ids"], i["expected_amount_minor"], i["currency"],
                        i["evidence_sets"][0], "reference answer") for i in self.truth["issues"]]
         return out + out if self.duplicate else out
 
     def act(self, observation: dict) -> dict:
-        """Submit immediately."""
+        """Отправляет сразу."""
         return {"action": "submit",
                 "findings": {"episode_id": self.truth["episode_id"], "findings": self.findings()}}

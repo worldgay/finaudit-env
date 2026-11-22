@@ -1,6 +1,6 @@
-"""Opaque identifiers drawn from the episode RNG.
+"""Непрозрачные идентификаторы из ГПСЧ эпизода.
 
-The alphabet has no vowels, so an ID can never spell a word (no hints).
+В алфавите нет гласных, поэтому ID никогда не складывается в слово (никаких подсказок).
 """
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ ALPHABET = "0123456789BCDFGHJKLMNPQRSTVWXZ"
 
 
 class IdFactory:
-    """Generates unique opaque IDs such as ``INV-7F3K2Q``."""
+    """Генерирует уникальные непрозрачные ID вида ``INV-7F3K2Q``."""
 
     def __init__(self, rng: random.Random, taken: set[str] | None = None) -> None:
         self._rng = rng
         self._taken: set[str] = set(taken or ())
 
     def new(self, prefix: str, length: int = 6) -> str:
-        """Return a fresh ID ``<prefix>-<length chars>`` never returned before."""
+        """Возвращает новый ID ``<prefix>-<length символов>``, ранее не выдававшийся."""
         while True:
             body = "".join(self._rng.choice(ALPHABET) for _ in range(length))
             ident = f"{prefix}-{body}"
@@ -26,10 +26,10 @@ class IdFactory:
                 return ident
 
     def reserve(self, idents: list[str]) -> None:
-        """Mark IDs as taken."""
+        """Помечает ID как занятые."""
         self._taken.update(idents)
 
 
 def episode_id(rng: random.Random) -> str:
-    """Return an opaque episode id ``ep-<12 hex>``."""
+    """Возвращает непрозрачный ID эпизода ``ep-<12 hex>``."""
     return "ep-" + "".join(rng.choice("0123456789abcdef") for _ in range(12))

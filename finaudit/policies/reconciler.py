@@ -1,10 +1,10 @@
-"""reconciler: a deliberately naive reconciliation baseline.
+"""reconciler: намеренно наивная базовая политика сверки.
 
-Reads all invoices and payments, then as much of the ledger as the budget allows, and flags:
-* duplicates: same direction/entity/currency/total/line items, issued <= 3 days apart (UTC dates);
-* cut-off: invoice whose UTC date is outside the period but is booked (ignores the company time zone);
-* allocation: refs vs AR/AP rows of the payment (exact only for base-currency payments, or rows missing).
-It never checks FX conversions. Its blind spots are intentional: time zones, FX, split payments.
+Читает все счета и платежи, затем столько ledger, сколько позволяет бюджет, и помечает:
+* дубли: то же направление/контрагент/валюта/сумма/позиции, выставлены с разницей <= 3 дня (UTC-даты);
+* период: счёт, чья UTC-дата вне периода, но он проведён (игнорирует часовой пояс компании);
+* распределение: ссылки против строк AR/AP платежа (точно только для платежей в базовой валюте или при отсутствии строк).
+Конвертации FX никогда не проверяет. Слепые зоны намеренные: часовые пояса, FX, разбитые платежи.
 """
 from __future__ import annotations
 
@@ -21,12 +21,12 @@ def _utc_day(ts: str) -> date:
 
 
 class ReconcilerPolicy:
-    """Simple sweep-and-compare auditor."""
+    """Простой аудитор «пройди и сравни»."""
 
     name = "reconciler"
 
     def reset(self, observation: dict) -> None:
-        """Start a new episode."""
+        """Начинает новый эпизод."""
         m = observation["result"]["manifest"]
         self.episode_id, self.base = m["episode_id"], m["base_currency"]
         self.start, self.end = date.fromisoformat(m["period_start"]), date.fromisoformat(m["period_end"])
@@ -46,7 +46,7 @@ class ReconcilerPolicy:
             self.stage += 1
 
     def act(self, observation: dict) -> dict:
-        """List tables in order; submit when done or when one step is left."""
+        """Читает таблицы по порядку; отправляет, когда закончил или остался один шаг."""
         if self.started:
             self._absorb(observation)
         self.started = True
@@ -55,13 +55,13 @@ class ReconcilerPolicy:
                                                      "findings": self.findings()[:30]}}
         return {"action": "list_records", "table": ORDER[self.stage], "cursor": self.cursor, "limit": 50}
 
-    # ------------------------------------------------------------------ analysis
+    # ------------------------------------------------------------------ анализ
     def _principal(self) -> dict[str, dict]:
         return {r["invoice_id"]: r for r in self.data["ledger"]
                 if r["invoice_id"] and r["payment_id"] is None and r["account"] in ("AR", "AP")}
 
     def findings(self) -> list[dict]:
-        """All findings this baseline believes in."""
+        """Все выводы, в которые верит эта базовая политика."""
         principal = self._principal()
         return self._duplicates(principal) + self._cutoff(principal) + self._allocation()
 
@@ -120,7 +120,7 @@ class ReconcilerPolicy:
         if not alloc:
             return abs(ref["amount_minor"])
         if pay["currency"] != self.base:
-            return 0  # would need FX rates; this baseline does not look them up
+            return 0  # понадобились бы курсы FX; эта базовая политика их не смотрит
         signed = sum((r["credit_minor"] - r["debit_minor"]) if incoming else (r["debit_minor"] - r["credit_minor"])
                      for r in alloc)
         return abs(ref["amount_minor"] - signed)

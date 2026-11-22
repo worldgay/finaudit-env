@@ -1,4 +1,4 @@
-"""Hidden history: company, counterparties, deals, invoices, payments, FX rates."""
+"""Скрытая история: компания, контрагенты, сделки, счета, платежи, курсы FX."""
 from __future__ import annotations
 
 import random
@@ -29,7 +29,7 @@ MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 
 @dataclass
 class World:
-    """Hidden ground-truth history of one company and one month."""
+    """Скрытая истинная история одной компании за один месяц."""
 
     company_name: str
     base: str
@@ -47,31 +47,31 @@ class World:
     slots: dict[str, list] = field(default_factory=lambda: {"I1": [], "I2": []})
 
     def exp(self, currency: str) -> int:
-        """Minor-unit exponent of a currency."""
+        """Экспонента минимальных единиц валюты."""
         return CURRENCY_EXPONENT[currency]
 
     def rate(self, currency: str, day: date) -> str:
-        """Policy rate currency->base for a local calendar date ("1" for base)."""
+        """Курс policy валюта->база для местной календарной даты ("1" для базы)."""
         if currency == self.base:
             return "1"
         return self.fx[(day.isoformat(), currency)]
 
     def ratio(self, currency: str, day: date) -> Decimal:
-        """Base minor units per source minor unit on ``day``."""
+        """Минимальных единиц базы на одну минимальную единицу источника на ``day``."""
         exp_diff = self.exp(self.base) - self.exp(currency)
         return Decimal(self.rate(currency, day)) * (Decimal(10) ** exp_diff)
 
     def last_day(self) -> int:
-        """Day number of the last day of the period."""
+        """Номер последнего дня периода."""
         return self.period_end.day
 
     def entities_of(self, role: str) -> list[dict]:
-        """Entities acting in ``role`` (customer / supplier)."""
+        """Контрагенты в роли ``role`` (customer / supplier)."""
         return [e for e in self.entities if e["role"] == role]
 
 
 def company_name(rng: random.Random) -> str:
-    """Fictional company name assembled from syllables."""
+    """Вымышленное название компании, собранное из слогов."""
     while True:
         stem = "".join(rng.choice(SYLLABLES) for _ in range(rng.randint(2, 3)))
         name = f"{stem.capitalize()} {rng.choice(SUFFIXES)}"
@@ -80,7 +80,7 @@ def company_name(rng: random.Random) -> str:
 
 
 def make_fx(rng: random.Random, base: str, foreign: list[str], start: date, end: date) -> dict:
-    """Daily FX random walk for each foreign currency, 6 decimals, never flat."""
+    """Ежедневное случайное блуждание курса для каждой иностранной валюты, 6 знаков, без ровных участков."""
     out: dict[tuple[str, str], str] = {}
     q = Decimal("0.000001")
     for cur in foreign:
@@ -100,7 +100,7 @@ def make_fx(rng: random.Random, base: str, foreign: list[str], start: date, end:
 
 
 def new_world(rng: random.Random, cfg: dict, ids: IdFactory) -> World:
-    """Create the company, period, FX table and counterparties."""
+    """Создаёт компанию, период, таблицу FX и контрагентов."""
     base = cfg.get("base_currency") or rng.choice(BASE_POOL)
     pool = [c for c in cfg["foreign_currencies"] if c != base]
     foreign = sorted(rng.sample(pool, rng.randint(1, min(3, len(pool)))))
@@ -119,26 +119,26 @@ def new_world(rng: random.Random, cfg: dict, ids: IdFactory) -> World:
 
 def random_moment(w: World, rng: random.Random, day_lo: int, day_hi: int,
                   hour_lo: int = 8, hour_hi: int = 20) -> datetime:
-    """Random local business moment on a day of the period (1-based)."""
+    """Случайный момент рабочего времени в день периода (с 1)."""
     day = w.period_start + timedelta(days=rng.randint(day_lo, day_hi) - 1)
     return make_local(day, rng.randint(hour_lo, hour_hi), rng.choice([0, 10, 15, 20, 30, 40, 45, 50]),
                       w.tz)
 
 
 def stamp(rng: random.Random, moment: datetime) -> str:
-    """Render a moment: ~35% of documents are written in +00:00."""
+    """Рендерит момент: ~35% документов записаны в +00:00."""
     return render_ts(moment, utc=rng.random() < 0.35)
 
 
 def random_total_major(rng: random.Random, currency: str) -> int:
-    """Random invoice size in major units for a currency."""
+    """Случайный размер счёта в основных единицах валюты."""
     lo, hi = MAJOR_RANGE[currency]
     return rng.randint(lo, hi)
 
 
 def random_items(w: World, rng: random.Random, currency: str, label: str | None = None,
                  n_items: int | None = None) -> list[dict]:
-    """Random line items; ``label`` (service period) is appended to descriptions."""
+    """Случайные позиции счёта; ``label`` (период услуги) добавляется к описаниям."""
     scale = 10 ** w.exp(currency)
     n = n_items or rng.randint(1, 3)
     month_label = f"{MONTHS[w.period_start.month - 1]} {w.period_start.year}"
@@ -157,7 +157,7 @@ def random_items(w: World, rng: random.Random, currency: str, label: str | None 
 def add_invoice(w: World, rng: random.Random, ids: IdFactory, *, direction: str, entity: dict,
                 currency: str, moment: datetime, kind: str, items: list[dict] | None = None,
                 posted: bool = True) -> dict:
-    """Create and register an invoice."""
+    """Создаёт и регистрирует счёт."""
     items = items if items is not None else random_items(w, rng, currency)
     inv = {"doc_id": ids.new("D"), "invoice_id": ids.new("INV"), "entity_id": entity["entity_id"],
            "direction": direction, "issued_at": stamp(rng, moment),
@@ -170,7 +170,7 @@ def add_invoice(w: World, rng: random.Random, ids: IdFactory, *, direction: str,
 
 def add_payment(w: World, rng: random.Random, ids: IdFactory, *, invs: list[dict],
                 amounts: list[int], moment: datetime, kind: str) -> dict:
-    """Create and register a payment allocated to ``invs`` with ``amounts``."""
+    """Создаёт и регистрирует платёж, распределённый на ``invs`` суммами ``amounts``."""
     first = invs[0]
     direction = "incoming" if first["direction"] == "receivable" else "outgoing"
     pay = {"doc_id": ids.new("D"), "payment_id": ids.new("PAY"), "timestamp": stamp(rng, moment),

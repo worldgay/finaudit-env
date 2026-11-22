@@ -1,4 +1,4 @@
-"""Leak scanner over observations, trajectories and public episode files.
+"""Сканер утечек по observations, траекториям и открытым файлам эпизодов.
 
 python -m finaudit.leakscan [--episodes DIR ...] [--trajectories FILE ...]
 """
@@ -18,10 +18,10 @@ ISSUE_ID = re.compile(r"iss-[0-9A-Z]{6}")
 
 
 def scan_observation(obs: object, first: bool = False) -> list[str]:
-    """Forbidden tokens inside one observation.
+    """Запрещённые токены внутри одного observation.
 
-    The first observation legitimately lists the four finding types and the policy;
-    for it only the manifest is scanned.
+    Первое observation законно перечисляет четыре типа выводов и policy;
+    в нём сканируется только manifest.
     """
     if not isinstance(obs, dict):
         return ["observation is not an object"]
@@ -41,7 +41,7 @@ def scan_observation(obs: object, first: bool = False) -> list[str]:
 
 
 def scan_trajectory_file(path: str | Path) -> list[str]:
-    """Scan every observation stored in a trajectories.jsonl file."""
+    """Сканирует каждое observation, сохранённое в файле trajectories.jsonl."""
     problems = []
     for n, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
         rec = json.loads(line)
@@ -53,7 +53,7 @@ def scan_trajectory_file(path: str | Path) -> list[str]:
 
 
 def scan_episode_dir(episode_dir: str | Path) -> list[str]:
-    """Scan the public files of an episode (issue ids from truth are extra tokens)."""
+    """Сканирует открытые файлы эпизода (ID ошибок из truth — дополнительные токены)."""
     root = Path(episode_dir)
     truth_path = root / "private" / "truth.json"
     extra: tuple[str, ...] = ()
@@ -73,8 +73,8 @@ def scan_episode_dir(episode_dir: str | Path) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI: exit 1 when anything leaks."""
-    ap = argparse.ArgumentParser(description="Scan for leaks of private grader data")
+    """CLI: код выхода 1, если что-то утекает."""
+    ap = argparse.ArgumentParser(description="Поиск утечек закрытых данных оценщика")
     ap.add_argument("--episodes", nargs="*", default=[])
     ap.add_argument("--trajectories", nargs="*", default=[])
     args = ap.parse_args(argv)
@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     for traj in args.trajectories:
         problems += scan_trajectory_file(traj)
     for p in problems:
-        sys.stdout.write(f"LEAK {p}\n")
+        sys.stdout.write(f"УТЕЧКА {p}\n")
     sys.stdout.write(f"leakscan: {len(problems)} problems\n")
     return 1 if problems else 0
 

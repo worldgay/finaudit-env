@@ -1,4 +1,4 @@
-"""Distractors: >= 3 kinds everywhere, never flagged by the reference auditor."""
+"""Отвлекающие случаи: >= 3 вида везде, эталонный аудитор их никогда не помечает."""
 import collections
 import json
 
@@ -47,5 +47,5 @@ def test_recurring_same_amount_not_duplicate():
     for seed in range(20):
         pub = parse_public(generate_episode(seed, {**SMALL, "clean": True}).files)
         groups = collections.Counter((i["entity_id"], i["total_minor"]) for i in pub["invoices"])
-        assert max(groups.values()) >= 3  # weekly series present
+        assert max(groups.values()) >= 3  # еженедельная серия присутствует
         assert not [f for f in reference_audit(pub) if f["type"] == "DUPLICATE_INVOICE"]

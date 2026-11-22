@@ -103,7 +103,7 @@ def test_hundred_steps_truncate(env_err):
     obs, reward, term, trunc, info = env_err.step({"action": "calculator", "expression": "1"})
     assert trunc and not term and obs["steps_left"] == 0
     assert info["inspection_steps"] == 100 and info["tp"] == 0
-    assert reward == -1.0  # errors exist, empty answer
+    assert reward == -1.0  # ошибки есть, ответ пустой
 
 
 def test_submit_on_step_100_counts(env_clean):
@@ -148,7 +148,7 @@ def test_eval_invalid_findings_message_is_generic(err_dir):
     env.reset(0, {"episode_dir": str(err_dir), "mode": "eval"})
     obs, reward, term, *_ = env.step({"action": "submit", "findings": {"x": 1}})
     assert obs["error"]["code"] == "INVALID_FINDINGS" and reward == 0.0 and term
-    assert obs["error"]["message"] == "findings rejected: findings structure rejected"
+    assert obs["error"]["message"] == "findings отклонены: структура findings отклонена"
 
 
 def test_reset_isolates_state(env_err, clean_dir):
@@ -213,4 +213,4 @@ def test_train_invalid_structure_logged(err_dir, tmp_path):
     env.reset(0, {"episode_dir": str(err_dir), "mode": "train"})
     obs, reward, term, *_ = env.step({"action": "submit", "findings": {"episode_id": "nope", "findings": []}})
     log = json.loads((tmp_path / "g.jsonl").read_text().splitlines()[-1])
-    assert reward == -1.0 and term and log["valid"] is False and log["reason"] == "episode_id mismatch"
+    assert reward == -1.0 and term and log["valid"] is False and log["reason"] == "episode_id не совпадает"

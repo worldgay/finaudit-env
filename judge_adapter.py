@@ -1,20 +1,20 @@
-"""judge_adapter.py - the organisers' single connection point (docs/CHECKS.txt, "Единый способ подключения").
+"""judge_adapter.py — единая точка подключения организаторов (docs/CHECKS.txt, "Единый способ подключения").
 
-A thin translation layer over the existing environment; it changes no task semantics:
+Тонкий слой перевода поверх существующей среды; смысл задачи он не меняет:
 
-* ``generate_episode(seed, config, output_dir)`` writes ``output_dir/public/*`` (manifest.json,
-  ledger.csv, invoices.jsonl, payments.jsonl, fx.csv, policy.json) and ``output_dir/private/*``
-  (truth.json, provenance.json, generation.json) with the team generator.
-* ``make_env()`` returns an object with ``reset(seed, config)`` / ``step(action)``.
+* ``generate_episode(seed, config, output_dir)`` генератором команды записывает ``output_dir/public/*``
+  (manifest.json, ledger.csv, invoices.jsonl, payments.jsonl, fx.csv, policy.json) и ``output_dir/private/*``
+  (truth.json, provenance.json, generation.json).
+* ``make_env()`` возвращает объект с ``reset(seed, config)`` / ``step(action)``.
   ``config = {"mode": "closed" | "train", "episode_dir": ..., "team_config": {...}}``;
-  actions are ``{"name": <action>, "args": {...}}``.
-* ``score_episode(episode_dir, findings, inspection_steps)`` is the closed grader call.
+  действия — ``{"name": <action>, "args": {...}}``.
+* ``score_episode(episode_dir, findings, inspection_steps)`` — закрытый вызов оценщика.
 
-Observations: first ``{"task", "manifest", "policy", "remaining_steps"}``, then
-``{"result", "error", "remaining_steps"}``. Results: list_records -> ``{"records", "next_cursor"}``;
-get_record / get_document -> the record / document object; calculator -> decimal string;
-submit -> ``{"accepted": true}`` (or an INVALID_FINDINGS error, never a correctness signal).
-In closed mode every reward is 0 and ``info`` only holds ``steps_used``.
+Observations: сначала ``{"task", "manifest", "policy", "remaining_steps"}``, затем
+``{"result", "error", "remaining_steps"}``. Результаты: list_records -> ``{"records", "next_cursor"}``;
+get_record / get_document -> объект записи / документа; calculator -> десятичная строка;
+submit -> ``{"accepted": true}`` (или ошибка INVALID_FINDINGS, никогда не сигнал правильности).
+В закрытом режиме любая награда равна 0, а ``info`` содержит только ``steps_used``.
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def _team_config(config: dict | None) -> dict:
 
 
 def generate_episode(seed: int, config: dict, output_dir: str) -> None:
-    """Generate one verified episode for (seed, team config) directly into ``output_dir``."""
+    """Генерирует один проверенный эпизод для (seed, конфиг команды) прямо в ``output_dir``."""
     cfg = _team_config(config)
     cfg.pop("mode", None)
     write_files(_generate(int(seed), cfg).files, output_dir)
@@ -51,7 +51,7 @@ def _error(err: dict | None) -> dict | None:
 
 
 class JudgeEnv:
-    """reset/step in the organisers' envelope around one ``FinAuditEnv``."""
+    """reset/step в оболочке организаторов вокруг одного ``FinAuditEnv``."""
 
     def __init__(self, time_limit: float = TIME_LIMIT_SECONDS) -> None:
         self.time_limit = time_limit
@@ -59,7 +59,7 @@ class JudgeEnv:
         self.started: float | None = None
 
     def reset(self, seed: int | None = 0, config: dict | None = None) -> tuple[dict, dict]:
-        """``mode`` closed -> the environment's eval mode (reward 0, no diagnostics)."""
+        """``mode`` closed -> режим eval среды (награда 0, без диагностики)."""
         config = dict(config or {})
         mode = config.get("mode", "train")
         if mode not in ("closed", "train"):
@@ -70,7 +70,7 @@ class JudgeEnv:
             inner["episode_dir"] = str(config["episode_dir"])
             if not (Path(inner["episode_dir"]) / "public" / "manifest.json").is_file():
                 raise FileNotFoundError("episode_dir must contain public/manifest.json")
-        self.started = time.monotonic()  # the 60 s budget starts at reset, as in the checks
+        self.started = time.monotonic()  # бюджет 60 с начинается с reset, как в проверках
         obs, _ = self.env.reset(seed, inner)
         res = obs["result"]
         first = {"task": res["task"], "manifest": res["manifest"], "policy": res["policy"],
@@ -78,7 +78,7 @@ class JudgeEnv:
         return first, {}
 
     def step(self, action: object) -> tuple[dict, float, bool, bool, dict]:
-        """One action ``{"name": ..., "args": {...}}``; every call before the end costs a step."""
+        """Одно действие ``{"name": ..., "args": {...}}``; каждый вызов до завершения стоит шаг."""
         if self.started is None:
             raise RuntimeError("call reset() first")
         if not self.env.done and time.monotonic() - self.started > self.time_limit:
@@ -111,18 +111,18 @@ class JudgeEnv:
 
 
 def make_env() -> JudgeEnv:
-    """A fresh environment object (the jury calls reset before every episode)."""
+    """Новый объект среды (жюри вызывает reset перед каждым эпизодом)."""
     return JudgeEnv()
 
 
 def score_episode(episode_dir: str, findings: dict, inspection_steps: int) -> dict:
-    """Grade ``findings`` against the episode truth; invalid structure -> return -1, metrics null."""
+    """Оценивает ``findings`` относительно truth эпизода; невалидная структура -> return -1, метрики null."""
     files = read_files(episode_dir)
     public = parse_public(files)
     truth = json.loads(files["private/truth.json"])
     res = grade(truth, findings, Store(public).ids, int(inspection_steps), tolerances(public["policy"]))
     if not res.valid:
-        sys.stderr.write(f"grader: {truth['episode_id']}: findings rejected: {res.reason}\n")
+        sys.stderr.write(f"grader: {truth['episode_id']}: findings отклонены: {res.reason}\n")
         return {"tp": None, "fp": None, "fn": None, "precision": None, "recall": None, "f1": None,
                 "return": -1.0}
     return {"tp": res.tp, "fp": res.fp, "fn": res.fn, "precision": res.precision, "recall": res.recall,

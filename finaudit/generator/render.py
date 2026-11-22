@@ -1,4 +1,4 @@
-"""Shuffle and render the public and private files of an episode (in memory)."""
+"""Перемешивает и рендерит открытые и закрытые файлы эпизода (в памяти)."""
 from __future__ import annotations
 
 import random
@@ -42,7 +42,7 @@ INVOICE_KEYS = ("doc_id", "invoice_id", "entity_id", "direction", "issued_at", "
 
 @dataclass(frozen=True)
 class Episode:
-    """In-memory episode: relative path -> file text."""
+    """Эпизод в памяти: относительный путь -> текст файла."""
 
     episode_id: str
     files: dict[str, str]
@@ -78,7 +78,7 @@ def _provenance(ctx: Ctx, eid: str, plan: dict) -> dict:
 
 def render_episode(ctx: Ctx, rng: random.Random, plan: dict, seed: int, cfg: dict,
                    attempt: int) -> Episode:
-    """Shuffle row order and produce all public and private files."""
+    """Перемешивает порядок строк и создаёт все открытые и закрытые файлы."""
     eid = episode_id(rng)
     ledger = list(ctx.rows)
     rng.shuffle(ledger)

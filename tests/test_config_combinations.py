@@ -1,4 +1,4 @@
-"""New parameter combinations (as a closed check would use): every base currency x time zone."""
+"""Новые сочетания параметров (как в закрытой проверке): каждая базовая валюта x часовой пояс."""
 import json
 
 import pytest

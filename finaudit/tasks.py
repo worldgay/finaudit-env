@@ -1,4 +1,4 @@
-"""Task runner behind every Makefile target (also used as `make` inside Docker).
+"""Запуск задач за каждой целью Makefile (также используется как `make` внутри Docker).
 
 python -m finaudit.tasks {test|episodes|trajectories|check|jury|demo|report}
 """
@@ -16,7 +16,7 @@ def _run(*args: str) -> int:
 
 
 def run_target(name: str) -> int:
-    """Run one target; returns the process exit status."""
+    """Запускает одну цель; возвращает код выхода процесса."""
     if name == "install":
         return _run("-m", "pip", "install", "--no-index", "--find-links", "vendor/wheels",
                     "-r", "requirements.lock", "-r", "requirements-dev.lock")
@@ -29,8 +29,8 @@ def run_target(name: str) -> int:
     if name == "check":
         start = time.monotonic()
         status = run_target("test") or _run("-m", "finaudit.smoke")
-        sys.stdout.write(f"make check: {'OK' if status == 0 else 'FAILED'} "
-                         f"in {time.monotonic() - start:.1f}s\n")
+        sys.stdout.write(f"make check: {'OK' if status == 0 else 'СБОЙ'} "
+                         f"за {time.monotonic() - start:.1f} с\n")
         return status
     if name == "jury":
         return _run("-m", "finaudit.jury")
@@ -38,12 +38,12 @@ def run_target(name: str) -> int:
         return _run("-m", "finaudit.demo")
     if name == "report":
         return _run("-m", "finaudit.report")
-    sys.stderr.write(f"unknown target {name!r}; known: {', '.join(TARGETS)}\n")
+    sys.stderr.write(f"неизвестная цель {name!r}; известные: {', '.join(TARGETS)}\n")
     return 2
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the targets given on the command line (default: check)."""
+    """Запускает цели из командной строки (по умолчанию: check)."""
     names = (argv if argv is not None else sys.argv[1:]) or ["check"]
     for name in names:
         status = run_target(name)

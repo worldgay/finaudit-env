@@ -1,8 +1,8 @@
-"""Independent reference auditor.
+"""Независимый эталонный аудитор.
 
-Reads ONLY the public files (manifest, policy, ledger, invoices, payments, fx)
-and re-derives every discrepancy from the published policy. It deliberately
-does not import the injectors: verify.py compares its output with truth.json.
+Читает ТОЛЬКО открытые файлы (manifest, policy, ledger, invoices, payments, fx)
+и заново выводит каждое расхождение из опубликованной policy. Он намеренно
+не импортирует инжекторы: verify.py сравнивает его результат с truth.json.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from finaudit.util.timeutil import in_period, local_date, parse_date
 
 
 class _Books:
-    """Indexed view of the public files."""
+    """Индексированное представление открытых файлов."""
 
     def __init__(self, public: dict) -> None:
         m = public["manifest"]
@@ -32,19 +32,19 @@ class _Books:
                 self.inv_rows.setdefault(r["invoice_id"], []).append(r)
 
     def rate(self, currency: str, day) -> str:
-        """Policy rate for a local date."""
+        """Курс по policy для местной даты."""
         return "1" if currency == self.base else self.rates[(day.isoformat(), currency)]
 
     def conv(self, amount: int, currency: str, day) -> int:
-        """Policy conversion to base minor units."""
+        """Конвертация по policy в минимальные единицы базы."""
         return convert(amount, self.exps[currency], self.rate(currency, day), self.exps[self.base])
 
     def fx_ref(self, currency: str, day) -> str:
-        """Public id of the policy fx row."""
+        """Открытый ID строки fx по policy."""
         return f"fx:{day.isoformat()}:{currency}:{self.base}"
 
     def principal(self, inv: dict) -> dict | None:
-        """The AR (receivable) or AP (payable) row that books an invoice."""
+        """Строка AR (к получению) или AP (к оплате), проводящая счёт."""
         acct = "AR" if inv["direction"] == "receivable" else "AP"
         rows = [r for r in self.inv_rows.get(inv["invoice_id"], []) if r["account"] == acct]
         return rows[0] if rows else None
@@ -132,7 +132,7 @@ def _payment_checks(b: _Books) -> list[dict]:
 
 
 def reference_audit(public: dict) -> list[dict]:
-    """Return every discrepancy found in the public records (sorted, canonical)."""
+    """Возвращает все расхождения, найденные в открытых записях (отсортированные, канонические)."""
     b = _Books(public)
     found = _invoice_checks(b) + _duplicate_checks(b) + _payment_checks(b)
     return sorted(found, key=lambda f: dumps([f["type"], f["affected_ids"]]))

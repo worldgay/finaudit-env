@@ -1,6 +1,6 @@
-"""A small JSON-Schema subset validator (stdlib only).
+"""Небольшой валидатор подмножества JSON-Schema (только stdlib).
 
-Supported keywords: type, properties, required, additionalProperties (bool),
+Поддерживаемые ключевые слова: type, properties, required, additionalProperties (bool),
 items, enum, const, pattern, minimum, maximum, minLength, maxLength,
 minItems, maxItems, anyOf, oneOf.
 """
@@ -25,12 +25,12 @@ _TYPES = {
 
 
 def load_schema(name: str) -> dict:
-    """Load ``finaudit/schemas/<name>.schema.json``."""
+    """Загружает ``finaudit/schemas/<name>.schema.json``."""
     return json.loads((SCHEMA_DIR / f"{name}.schema.json").read_text(encoding="utf-8"))
 
 
 def errors(value: Any, schema: dict, path: str = "$") -> list[str]:
-    """Return a list of validation errors (empty when valid)."""
+    """Возвращает список ошибок валидации (пусто, если валидно)."""
     out: list[str] = []
     typ = schema.get("type")
     if typ is not None:
@@ -100,5 +100,5 @@ def _array_errors(value: list, schema: dict, path: str) -> list[str]:
 
 
 def is_valid(value: Any, schema_name: str) -> bool:
-    """True when ``value`` validates against the named schema."""
+    """True, если ``value`` проходит проверку по названной схеме."""
     return not errors(value, load_schema(schema_name))

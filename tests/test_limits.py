@@ -1,4 +1,4 @@
-"""Largest episode: generation + 100 steps + grading < 5 s, memory < 500 MB."""
+"""Самый большой эпизод: генерация + 100 шагов + оценка < 5 с, память < 500 МБ."""
 import resource
 import time
 

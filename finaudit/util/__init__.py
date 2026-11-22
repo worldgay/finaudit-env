@@ -1,1 +1,1 @@
-"""finaudit.util package."""
+"""Пакет finaudit.util."""

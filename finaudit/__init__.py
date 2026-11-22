@@ -1,3 +1,3 @@
-"""FinAudit RL environment: synthetic companies with hidden financial errors."""
+"""RL-среда FinAudit: синтетические компании со скрытыми финансовыми ошибками."""
 ENV_VERSION = "1.2.0"
 SCHEMA_VERSION = "1.0"

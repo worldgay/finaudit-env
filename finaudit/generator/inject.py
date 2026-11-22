@@ -1,4 +1,4 @@
-"""Error injectors: each makes one causal change and returns the Issue it created."""
+"""Инжекторы ошибок: каждый делает одно причинное изменение и возвращает созданную Issue."""
 from __future__ import annotations
 
 import copy
@@ -15,12 +15,12 @@ from finaudit.util.timeutil import make_local
 
 
 class NoCandidate(Exception):
-    """Raised when an injector finds nothing to corrupt (generator retries)."""
+    """Выбрасывается, когда инжектору нечего портить (генератор повторяет попытку)."""
 
 
 @dataclass(frozen=True)
 class Issue:
-    """One hidden error as recorded in truth.json."""
+    """Одна скрытая ошибка в том виде, как она записана в truth.json."""
 
     issue_id: str
     type: str
@@ -31,7 +31,7 @@ class Issue:
     scenario: str | None
 
     def to_dict(self) -> dict:
-        """JSON form."""
+        """Форма JSON."""
         return {"issue_id": self.issue_id, "type": self.type, "affected_ids": list(self.affected_ids),
                 "expected_amount_minor": self.expected_amount_minor, "currency": self.currency,
                 "evidence_sets": [list(e) for e in self.evidence_sets], "scenario": self.scenario}
@@ -39,7 +39,7 @@ class Issue:
 
 @dataclass(frozen=True)
 class ProvenanceEntry:
-    """What an injector changed (table, id, field, before -> after) and in which order."""
+    """Что изменил инжектор (table, id, field, before -> after) и в каком порядке."""
 
     issue_id: str
     injector: str
@@ -47,14 +47,14 @@ class ProvenanceEntry:
     order: int
 
     def to_dict(self) -> dict:
-        """JSON form."""
+        """Форма JSON."""
         return {"issue_id": self.issue_id, "injector": self.injector,
                 "changes": list(self.changes), "order": self.order}
 
 
 @dataclass
 class Ctx:
-    """Mutable working state shared by the injectors of one episode."""
+    """Изменяемое рабочее состояние, общее для инжекторов одного эпизода."""
 
     w: World
     rows: list[dict]
@@ -66,56 +66,56 @@ class Ctx:
     changes: list[dict] = field(default_factory=list)
 
     def inv(self, iid: str) -> dict:
-        """Invoice by invoice_id."""
+        """Счёт по invoice_id."""
         return next(i for i in self.w.invoices if i["invoice_id"] == iid)
 
     def pay(self, pid: str) -> dict:
-        """Payment by payment_id."""
+        """Платёж по payment_id."""
         return next(p for p in self.w.payments if p["payment_id"] == pid)
 
     def pay_rows(self, pid: str) -> list[dict]:
-        """Ledger rows carrying payment_id ``pid``."""
+        """Строки ledger с payment_id ``pid``."""
         return [r for r in self.rows if r["payment_id"] == pid]
 
     def principal(self, iid: str) -> dict:
-        """AR/AP row that books an invoice itself (no payment_id)."""
+        """Строка AR/AP, проводящая сам счёт (без payment_id)."""
         return next(r for r in self.rows if r["invoice_id"] == iid and r["payment_id"] is None
                     and r["account"] in ("AR", "AP"))
 
     def counterpart(self, iid: str) -> dict:
-        """REVENUE/EXPENSE row that books an invoice."""
+        """Строка REVENUE/EXPENSE, проводящая счёт."""
         return next(r for r in self.rows if r["invoice_id"] == iid and r["payment_id"] is None
                     and r["account"] in ("REVENUE", "EXPENSE"))
 
     def alloc_row(self, pid: str, iid: str) -> dict:
-        """AR/AP row allocating payment ``pid`` to invoice ``iid``."""
+        """Строка AR/AP, распределяющая платёж ``pid`` на счёт ``iid``."""
         return next(r for r in self.pay_rows(pid) if r["invoice_id"] == iid
                     and r["account"] in ("AR", "AP"))
 
     def set(self, row: dict, fld: str, value) -> None:
-        """Change one field of a ledger row and log it."""
+        """Меняет одно поле строки ledger и записывает изменение."""
         self.changes.append({"table": "ledger", "id": row["row_id"], "field": fld,
                              "before": row[fld], "after": value})
         row[fld] = value
 
     def set_amount(self, row: dict, amount: int) -> None:
-        """Change the non-zero side of a row."""
+        """Меняет ненулевую сторону строки."""
         self.set(row, "debit_minor" if row["debit_minor"] > 0 else "credit_minor", amount)
 
     def add(self, row: dict) -> None:
-        """Append a ledger row and log it."""
+        """Добавляет строку ledger и записывает изменение."""
         self.rows.append(row)
         self.changes.append({"table": "ledger", "id": row["row_id"], "field": "*",
                              "before": None, "after": dict(row)})
 
     def remove(self, row: dict) -> None:
-        """Delete a ledger row and log it."""
+        """Удаляет строку ledger и записывает изменение."""
         self.rows.remove(row)
         self.changes.append({"table": "ledger", "id": row["row_id"], "field": "*",
                              "before": dict(row), "after": None})
 
     def rebalance(self, group: list[dict], template: dict, invoice_id: str | None) -> None:
-        """Re-plug FX_GAIN_LOSS so that a row group balances again."""
+        """Заново подставляет FX_GAIN_LOSS, чтобы группа строк снова сходилась."""
         fx_rows = [r for r in group if r["account"] == "FX_GAIN_LOSS"]
         bal = plug_amount(group)
         for r in fx_rows:
@@ -125,7 +125,7 @@ class Ctx:
             self.add(plug)
 
     def record(self, issue: Issue, injector: str) -> Issue:
-        """Store the issue with the change log accumulated since the last record."""
+        """Сохраняет ошибку вместе с журналом изменений, накопленным с прошлой записи."""
         self.issues.append(issue)
         order = len(self.provenance)
         self.provenance.append(ProvenanceEntry(issue.issue_id, injector, tuple(self.changes), order))
@@ -161,7 +161,7 @@ def _plain_payments(ctx: Ctx, foreign: bool = False) -> list[dict]:
 
 
 def inject_duplicate(ctx: Ctx, orig: dict | None = None, scenario: str | None = None) -> tuple[Issue, dict]:
-    """Copy an invoice (new doc/invoice id, same lines, date shifted 0-3 days) and post it."""
+    """Копирует счёт (новые doc/invoice ID, те же строки, дата сдвинута на 0-3 дня) и проводит его."""
     w, rng = ctx.w, ctx.rng
     if orig is None:
         cands = _plain_posted(ctx)
@@ -192,7 +192,7 @@ def inject_duplicate(ctx: Ctx, orig: dict | None = None, scenario: str | None = 
 
 
 def _recoverable_split(ctx: Ctx, amount: int, currency: str, day, frac_lo: int, frac_hi: int) -> int | None:
-    """Pick x < amount whose base value round-trips exactly; returns x or None."""
+    """Выбирает x < amount, чьё базовое значение точно конвертируется обратно; возвращает x или None."""
     w = ctx.w
     rate, es, eb = w.rate(currency, day), w.exp(currency), w.exp(w.base)
     full = convert(amount, es, rate, eb)
@@ -209,7 +209,7 @@ def _alloc_issue(ctx: Ctx, pay: dict, inv: dict, unalloc: int, scenario: str | N
     group = ctx.pay_rows(pay["payment_id"])
     rows = [r["row_id"] for r in group]
     booked = any(r["invoice_id"] == inv["invoice_id"] and r["account"] in ("AR", "AP") for r in group)
-    if booked and pay["currency"] != ctx.w.base:  # the amount can only be checked with the invoice-date rate
+    if booked and pay["currency"] != ctx.w.base:  # сумму можно проверить только по курсу даты счёта
         rows.append(f"fx:{_day(ctx, inv['invoice_id']).isoformat()}:{pay['currency']}:{ctx.w.base}")
     ev = _sorted(pay["doc_id"], inv["doc_id"], *rows)
     issue = Issue(ctx.ids.new("iss"), "PAYMENT_ALLOCATION", _sorted(inv["invoice_id"], pay["payment_id"]),
@@ -219,7 +219,7 @@ def _alloc_issue(ctx: Ctx, pay: dict, inv: dict, unalloc: int, scenario: str | N
 
 def inject_allocation(ctx: Ctx, pay: dict | None = None, variant: str | None = None,
                       scenario: str | None = None) -> Issue:
-    """Leave part (a), all (b) of a payment on SUSPENSE, or do not post it at all (c)."""
+    """Оставляет часть (a) или весь (b) платёж на SUSPENSE либо не проводит его вовсе (c)."""
     w, rng = ctx.w, ctx.rng
     if pay is None:
         cands = _plain_payments(ctx)
@@ -255,7 +255,7 @@ def inject_allocation(ctx: Ctx, pay: dict | None = None, variant: str | None = N
 
 
 def _wrong_rate(ctx: Ctx, currency: str, moment, variant: str) -> tuple[str, str]:
-    """Return (variant, wrong rate) for a document moment."""
+    """Возвращает (вариант, неверный курс) для момента документа."""
     w = ctx.w
     day = moment.date()
     utc_day = moment.astimezone(timezone.utc).date()
@@ -270,7 +270,7 @@ def _wrong_rate(ctx: Ctx, currency: str, moment, variant: str) -> tuple[str, str
 
 def inject_fx(ctx: Ctx, target: dict | None = None, variant: str | None = None,
               scenario: str | None = None) -> Issue:
-    """Book a document in base currency at the rate of another date (or the inverse rate)."""
+    """Проводит документ в базовой валюте по курсу другой даты (или по обратному курсу)."""
     w, rng = ctx.w, ctx.rng
     cands = [target] if target else _plain_posted(ctx, foreign=True) + _plain_payments(ctx, foreign=True)
     rng.shuffle(cands)
@@ -307,7 +307,7 @@ def inject_fx(ctx: Ctx, target: dict | None = None, variant: str | None = None,
 
 
 def inject_cutoff(ctx: Ctx) -> Issue:
-    """Post an invoice issued after period end (local date) inside the period."""
+    """Проводит внутри периода счёт, выставленный после конца периода (по местной дате)."""
     w, rng = ctx.w, ctx.rng
     cands = [i for i in w.invoices if w.meta[i["invoice_id"]]["kind"] == "next_month"
              and i["invoice_id"] not in ctx.used]
@@ -326,8 +326,8 @@ def inject_cutoff(ctx: Ctx) -> Issue:
 
 
 def inject_i1(ctx: Ctx, iid: str, pid: str) -> None:
-    """I1: late-evening foreign payment on the last day, BANK at the UTC-date (or next-day)
-    rate, then a partial allocation to SUSPENSE. FX first, allocation second."""
+    """I1: поздний вечерний иностранный платёж в последний день, BANK по курсу UTC-даты (или следующего
+    дня), затем частичное распределение на SUSPENSE. Сначала FX, потом распределение."""
     pay = ctx.pay(pid)
     moment = ctx.w.meta[pid]["moment"]
     utc_differs = moment.astimezone(timezone.utc).date() != moment.date()
@@ -338,7 +338,7 @@ def inject_i1(ctx: Ctx, iid: str, pid: str) -> None:
 
 
 def inject_i2(ctx: Ctx, iid: str, pid: str) -> None:
-    """I2: invoice duplicated; its single payment is booked 50/50 to original and copy."""
+    """I2: счёт продублирован; единственный платёж по нему проведён 50/50 на оригинал и копию."""
     w = ctx.w
     orig, pay = ctx.inv(iid), ctx.pay(pid)
     _, dup = inject_duplicate(ctx, orig=orig, scenario="I2")
@@ -360,7 +360,7 @@ def inject_i2(ctx: Ctx, iid: str, pid: str) -> None:
 
 
 def run_injections(ctx: Ctx, plan: dict[str, int]) -> None:
-    """Apply the plan in a fixed order: I1, I2, duplicates, allocations, FX, cut-off."""
+    """Применяет план в фиксированном порядке: I1, I2, дубли, распределения, FX, период."""
     for iid, pid in ctx.w.slots["I1"]:
         inject_i1(ctx, iid, pid)
     for iid, pid in ctx.w.slots["I2"]:

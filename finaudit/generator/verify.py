@@ -1,4 +1,4 @@
-"""verify_episode(): structural checks + reference_audit(public) == truth + evidence sufficiency."""
+"""verify_episode(): структурные проверки + reference_audit(public) == truth + достаточность доказательств."""
 from __future__ import annotations
 
 import json
@@ -123,7 +123,7 @@ def _leaks(files: dict[str, str], truth: dict) -> list[str]:
 
 
 def verify_files(files: dict[str, str]) -> list[str]:
-    """Return a list of problems with an in-memory episode (empty = valid)."""
+    """Возвращает список проблем эпизода в памяти (пусто = валиден)."""
     pub = parse_public(files)
     truth = json.loads(files["private/truth.json"])
     problems = _structure(pub) + _truth_vs_audit(pub, truth) + _evidence(pub, truth) + _leaks(files, truth)
@@ -143,12 +143,12 @@ def verify_files(files: dict[str, str]) -> list[str]:
 
 
 def verify_episode(episode_dir: str | Path) -> list[str]:
-    """Verify an episode directory on disk."""
+    """Проверяет каталог эпизода на диске."""
     return verify_files(read_files(episode_dir))
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI: python -m finaudit.generator.verify EPISODE_DIR [...]  (exit 1 on any problem)."""
+    """CLI: python -m finaudit.generator.verify EPISODE_DIR [...]  (код выхода 1 при любой проблеме)."""
     import sys
     dirs = argv if argv is not None else sys.argv[1:]
     status = 0

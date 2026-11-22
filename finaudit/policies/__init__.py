@@ -1,1 +1,1 @@
-"""finaudit.policies package."""
+"""Пакет finaudit.policies."""

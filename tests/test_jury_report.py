@@ -1,4 +1,4 @@
-"""jury / analysis / attacks / report / demo on a tiny spec."""
+"""jury / analysis / attacks / report / demo на маленькой спецификации."""
 import json
 
 from finaudit.attacks import measure_attacks
@@ -38,4 +38,4 @@ def test_demo_runs(capsys):
     from finaudit.demo import main
     assert main() == 0
     out = capsys.readouterr().out
-    assert '"f1":1.0' in out and "identical sha256 of all files: True" in out
+    assert '"f1":1.0' in out and "одинаковый sha256 всех файлов: True" in out

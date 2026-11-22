@@ -1,9 +1,9 @@
-"""`make jury`: simulate the closed jury check.
+"""`make jury`: симуляция закрытой проверки жюри.
 
-20 fresh episodes (configs/jury.json: 5 clean, 5 with I1+I2, 10 mixed) x 4 policies in eval mode
-(isolated processes), 20 paired checks (transform: oracle reward preserved, issues map 1:1, verify),
-20 replays (same seed -> same sha256 of every file; same actions -> same trajectory bytes and reward),
-attack measurements, resources. Output: runs/jury/summary.json
+20 новых эпизодов (configs/jury.json: 5 чистых, 5 с I1+I2, 10 смешанных) x 4 политики в режиме eval
+(изолированные процессы), 20 парных проверок (transform: награда oracle сохраняется, ошибки сопоставляются 1:1,
+verify), 20 повторов (тот же seed -> тот же sha256 каждого файла; те же действия -> те же байты траектории и
+награда), измерения атак, ресурсы. Результат: runs/jury/summary.json
 """
 from __future__ import annotations
 
@@ -110,7 +110,7 @@ def _replays(eps: list[dict], out: Path, policy_seed: int) -> dict:
 
 
 def run_jury(spec_path: Path = ROOT / "configs" / "jury.json", out: Path = ROOT / "runs" / "jury") -> dict:
-    """Run the full simulation and write summary.json."""
+    """Запускает полную симуляцию и записывает summary.json."""
     started = time.monotonic()
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
     for sub in ("episodes", "eval", "replay"):
@@ -154,14 +154,14 @@ def run_jury(spec_path: Path = ROOT / "configs" / "jury.json", out: Path = ROOT 
 
 
 def main() -> int:
-    """CLI entry point."""
+    """Точка входа CLI."""
     s = run_jury()
     for name, st in s["policies"].items():
-        sys.stdout.write(f"jury: {name:15s} reward={st['mean_reward']:+.3f} f1={st['mean_f1']:.3f} "
-                         f"steps={st['mean_steps']:.1f}\n")
-    sys.stdout.write(f"jury: checks={s['checks']} paired={s['paired']['passed']}/{s['paired']['total']} "
-                     f"replay={s['replay']['passed']}/{s['replay']['total']} "
-                     f"time={s['resources']['total_seconds']}s\n")
+        sys.stdout.write(f"jury: {name:15s} награда={st['mean_reward']:+.3f} f1={st['mean_f1']:.3f} "
+                         f"шагов={st['mean_steps']:.1f}\n")
+    sys.stdout.write(f"jury: проверки={s['checks']} парные={s['paired']['passed']}/{s['paired']['total']} "
+                     f"повторы={s['replay']['passed']}/{s['replay']['total']} "
+                     f"время={s['resources']['total_seconds']} с\n")
     ok = (all(v for k, v in s["checks"].items() if isinstance(v, bool)) and s["checks"]["oracle_min_reward"] >= 0.9
           and s["paired"]["passed"] == s["paired"]["total"] and s["replay"]["passed"] == s["replay"]["total"])
     return 0 if ok else 1

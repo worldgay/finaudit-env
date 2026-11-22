@@ -1,4 +1,4 @@
-"""random_explorer: K ~ U[5, 60] random valid actions, then 0-3 random (valid) findings."""
+"""random_explorer: K ~ U[5, 60] случайных допустимых действий, затем 0-3 случайных (валидных) вывода."""
 from __future__ import annotations
 
 import argparse
@@ -11,7 +11,7 @@ TYPES = ("DUPLICATE_INVOICE", "PAYMENT_ALLOCATION", "FX_CONVERSION", "PERIOD_CUT
 
 
 class RandomExplorerPolicy:
-    """Explores randomly with its own seeded RNG; never reads private data."""
+    """Исследует случайно со своим ГПСЧ с seed; никогда не читает закрытые данные."""
 
     name = "random_explorer"
 
@@ -19,7 +19,7 @@ class RandomExplorerPolicy:
         self.rng = random.Random(seed)
 
     def reset(self, observation: dict) -> None:
-        """Start a new episode."""
+        """Начинает новый эпизод."""
         res = observation["result"]
         self.episode_id = res["manifest"]["episode_id"]
         self.base = res["manifest"]["base_currency"]
@@ -82,7 +82,7 @@ class RandomExplorerPolicy:
         return {"action": "submit", "findings": {"episode_id": self.episode_id, "findings": out}}
 
     def act(self, observation: dict) -> dict:
-        """Random exploration, then submit."""
+        """Случайное исследование, затем submit."""
         if self.steps > 0:
             self._absorb(observation)
         self.steps += 1
@@ -92,7 +92,7 @@ class RandomExplorerPolicy:
 
 
 def main() -> int:
-    """Agent process entry point."""
+    """Точка входа процесса агента."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=0)
     return run_stdio(RandomExplorerPolicy(ap.parse_args().seed))

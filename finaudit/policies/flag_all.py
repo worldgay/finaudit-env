@@ -1,4 +1,4 @@
-"""flag_all: reads the first page of invoices and payments, flags every document x every type."""
+"""flag_all: читает первую страницу счетов и платежей, помечает каждый документ x каждый тип."""
 from __future__ import annotations
 
 from finaudit.policies.base import finding, run_stdio
@@ -7,18 +7,18 @@ TYPES = ("DUPLICATE_INVOICE", "PAYMENT_ALLOCATION", "FX_CONVERSION", "PERIOD_CUT
 
 
 class FlagAllPolicy:
-    """Structurally valid but indiscriminate answer (up to 30 findings)."""
+    """Структурно валидный, но неразборчивый ответ (до 30 выводов)."""
 
     name = "flag_all"
 
     def reset(self, observation: dict) -> None:
-        """Remember the episode id."""
+        """Запоминает ID эпизода."""
         self.episode_id = observation["result"]["manifest"]["episode_id"]
         self.phase = 0
         self.docs: list[dict] = []
 
     def act(self, observation: dict) -> dict:
-        """Two listing steps, then submit."""
+        """Два шага чтения списков, затем submit."""
         if self.phase > 0 and observation.get("ok"):
             self.docs.extend(observation["result"]["records"])
         self.phase += 1

@@ -117,7 +117,7 @@ def build(summary: dict) -> str:
 def main() -> int:
     """Точка входа CLI."""
     summary = json.loads((ROOT / "runs" / "jury" / "summary.json").read_text(encoding="utf-8"))
-    (ROOT / "REPORT.txt").write_text(build(summary), encoding="utf-8")
+    (ROOT / "REPORT.txt").write_text(build(summary), encoding="utf-8", newline="\n")
     sys.stdout.write("report: REPORT.txt записан\n")
     return 0
 

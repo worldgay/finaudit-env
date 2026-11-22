@@ -1,1 +1,1 @@
-"""finaudit.grader package."""
+"""Пакет finaudit.grader."""

@@ -1,9 +1,9 @@
-"""Vocabulary that must never appear inside public records or observations."""
+"""Словарь, который никогда не должен появляться в открытых записях или observations."""
 from __future__ import annotations
 
 FINDING_TYPES = ("DUPLICATE_INVOICE", "PAYMENT_ALLOCATION", "FX_CONVERSION", "PERIOD_CUTOFF")
 
-# Words that would hint at an error, or at private grader material.
+# Слова, которые намекали бы на ошибку или на закрытые материалы оценщика.
 HINT_WORDS = ("duplicat", "dupl", "error", "wrong", "mistake", "fraud", "cutoff", "cut-off",
               "misalloc", "unalloc", "invalid", "fake", "issue_id", "seed", "truth",
               "provenance", "private", "inject", "anomal", "suspicious", "bogus")
@@ -12,13 +12,13 @@ PATH_MARKERS = ("/home/", "/app/", "/tmp/", "/mnt/", "/root/", "/usr/", "/var/",
 
 
 def text_has_hint(text: str) -> bool:
-    """True when ``text`` contains a hint word (case-insensitive)."""
+    """True, если ``text`` содержит слово-подсказку (без учёта регистра)."""
     low = text.lower()
     return any(w in low for w in HINT_WORDS)
 
 
 def scan_text(text: str, extra: tuple[str, ...] = ()) -> list[str]:
-    """Return every forbidden token found in ``text``."""
+    """Возвращает каждый запрещённый токен, найденный в ``text``."""
     low = text.lower()
     hits = [w for w in HINT_WORDS if w in low]
     hits += [t for t in FINDING_TYPES if t.lower() in low]

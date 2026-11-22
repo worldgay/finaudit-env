@@ -1,4 +1,4 @@
-"""Clean double-entry books derived from the hidden history (policy.json rules)."""
+"""Чистые книги двойной записи, выведенные из скрытой истории (правила policy.json)."""
 from __future__ import annotations
 
 import random
@@ -13,7 +13,7 @@ ACCOUNTS = ("AR", "AP", "REVENUE", "EXPENSE", "BANK", "SUSPENSE", "FX_GAIN_LOSS"
 
 def new_row(ids: IdFactory, ts: str, account: str, amount: int, side: str, base: str,
             entity_id: str | None, invoice_id: str | None, payment_id: str | None) -> dict:
-    """Create one ledger row; ``side`` is 'dr' or 'cr', ``amount`` > 0."""
+    """Создаёт одну строку ledger; ``side`` — 'dr' или 'cr', ``amount`` > 0."""
     return {"row_id": ids.new("L"), "timestamp": ts, "account": account,
             "debit_minor": amount if side == "dr" else 0,
             "credit_minor": amount if side == "cr" else 0, "currency": base,
@@ -21,13 +21,13 @@ def new_row(ids: IdFactory, ts: str, account: str, amount: int, side: str, base:
 
 
 def to_base(w: World, amount: int, currency: str, day) -> int:
-    """Policy conversion of ``amount`` (minor, currency) to base minor units on ``day``."""
+    """Конвертация ``amount`` (минимальные единицы, валюта) по policy в минимальные единицы базы на ``day``."""
     return convert(amount, w.exp(currency), w.rate(currency, day), w.exp(w.base))
 
 
 def invoice_rows(w: World, rng: random.Random, ids: IdFactory, inv: dict,
                  ts: str | None = None) -> list[dict]:
-    """Principal (AR/AP) and counterpart (REVENUE/EXPENSE) rows of an invoice."""
+    """Основная (AR/AP) и встречная (REVENUE/EXPENSE) строки счёта."""
     day = w.meta[inv["invoice_id"]]["moment"].date()
     amt = to_base(w, inv["total_minor"], inv["currency"], day)
     ts = ts or stamp(rng, w.meta[inv["invoice_id"]]["moment"])
@@ -38,13 +38,13 @@ def invoice_rows(w: World, rng: random.Random, ids: IdFactory, inv: dict,
 
 
 def plug_amount(group: list[dict]) -> int:
-    """Signed debit-minus-credit of a row group excluding FX_GAIN_LOSS rows."""
+    """Знаковая разность дебет минус кредит группы строк без строк FX_GAIN_LOSS."""
     return sum(r["debit_minor"] - r["credit_minor"] for r in group if r["account"] != "FX_GAIN_LOSS")
 
 
 def fx_plug_row(ids: IdFactory, w: World, template: dict, balance: int,
                 invoice_id: str | None = None) -> dict | None:
-    """FX_GAIN_LOSS row that balances a group with debit-credit ``balance``."""
+    """Строка FX_GAIN_LOSS, уравновешивающая группу с сальдо дебет-кредит ``balance``."""
     if balance == 0:
         return None
     side = "cr" if balance > 0 else "dr"
@@ -53,7 +53,7 @@ def fx_plug_row(ids: IdFactory, w: World, template: dict, balance: int,
 
 
 def payment_rows(w: World, rng: random.Random, ids: IdFactory, pay: dict) -> list[dict]:
-    """BANK row at the payment-date rate, AR/AP rows at invoice rates, FX difference row."""
+    """Строка BANK по курсу даты платежа, строки AR/AP по курсам счетов, строка курсовой разницы."""
     moment = w.meta[pay["payment_id"]]["moment"]
     ts = stamp(rng, moment)
     cur, pid, ent = pay["currency"], pay["payment_id"], pay["entity_id"]
@@ -75,7 +75,7 @@ def payment_rows(w: World, rng: random.Random, ids: IdFactory, pay: dict) -> lis
 
 
 def journal_pair(w: World, rng: random.Random, ids: IdFactory) -> list[dict]:
-    """A non-document journal entry (bank charges, payroll, interest) in base currency."""
+    """Проводка без документа (банковские комиссии, зарплата, проценты) в базовой валюте."""
     moment = random_moment(w, rng, 1, w.last_day(), 7, 21)
     ts = stamp(rng, moment)
     amt = max(1, random_total_major(rng, w.base) // rng.randint(3, 40)) * 10 ** w.exp(w.base)
@@ -86,9 +86,9 @@ def journal_pair(w: World, rng: random.Random, ids: IdFactory) -> list[dict]:
 
 def build_books(w: World, rng: random.Random, ids: IdFactory, ledger_range: list[int],
                 grow: int = 0, shrink: int = 0) -> list[dict]:
-    """Build the clean ledger and pad it with journal entries to a target size.
+    """Строит чистый ledger и дополняет его проводками до целевого размера.
 
-    ``grow``/``shrink`` reserve room for rows the injectors will add/remove later.
+    ``grow``/``shrink`` резервируют место под строки, которые инжекторы позже добавят/удалят.
     """
     rows: list[dict] = []
     for inv in w.invoices:
@@ -98,7 +98,7 @@ def build_books(w: World, rng: random.Random, ids: IdFactory, ledger_range: list
         rows.extend(payment_rows(w, rng, ids, pay))
     lo, hi = ledger_range
     floor, ceiling = lo + shrink, hi - grow - 1
-    if floor > ceiling:  # window too narrow for the worst case: aim at its middle
+    if floor > ceiling:  # окно слишком узкое для худшего случая: целимся в его середину
         floor = ceiling = (lo + hi - grow + shrink) // 2
     target = rng.randint(max(floor, len(rows)), max(ceiling, len(rows)))
     while len(rows) < target:
@@ -107,7 +107,7 @@ def build_books(w: World, rng: random.Random, ids: IdFactory, ledger_range: list
 
 
 def check_invariants(w: World, rows: list[dict]) -> list[str]:
-    """Clean-book invariants; returns a list of violations (empty = OK)."""
+    """Инварианты чистых книг; возвращает список нарушений (пусто = OK)."""
     bad: list[str] = []
     for r in rows:
         if not ((r["debit_minor"] > 0) ^ (r["credit_minor"] > 0)) or min(r["debit_minor"], r["credit_minor"]) < 0:

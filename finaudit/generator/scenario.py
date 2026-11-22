@@ -1,4 +1,4 @@
-"""Error plan, scenario slots (I1/I2) and ordinary documents."""
+"""План ошибок, слоты сценариев (I1/I2) и обычные документы."""
 from __future__ import annotations
 
 import random
@@ -17,7 +17,7 @@ def _draw(rng: random.Random, spec: list[int] | int) -> int:
 
 
 def plan_errors(rng: random.Random, cfg: dict) -> dict[str, int]:
-    """Draw how many errors of each type and interaction scenarios to inject (<= 12 issues)."""
+    """Определяет, сколько ошибок каждого типа и сценариев взаимодействия внести (<= 12 ошибок)."""
     plan = {t: _draw(rng, cfg["errors"][t]["count"]) for t in ERROR_TYPES}
     plan["I1"] = _draw(rng, cfg["interactions"]["I1"])
     plan["I2"] = _draw(rng, cfg["interactions"]["I2"])
@@ -33,18 +33,18 @@ def plan_errors(rng: random.Random, cfg: dict) -> dict[str, int]:
 
 
 def issue_count(plan: dict[str, int]) -> int:
-    """Number of truth issues a plan produces (each scenario yields two)."""
+    """Число ошибок truth, которое даёт план (каждый сценарий даёт две)."""
     return sum(plan[t] for t in ERROR_TYPES) + 2 * plan["I1"] + 2 * plan["I2"]
 
 
 def doc_need(plan: dict[str, int]) -> int:
-    """Lower bound on world documents needed so every injector finds a candidate."""
+    """Нижняя граница числа документов мира, чтобы каждый инжектор нашёл кандидата."""
     return (2 * (plan["PAYMENT_ALLOCATION"] + 1) + plan["FX_CONVERSION"] + 1
             + plan["DUPLICATE_INVOICE"] + 1 + 4 * (plan["I1"] + plan["I2"]))
 
 
 def add_slots(w: World, rng: random.Random, ids: IdFactory, plan: dict[str, int]) -> None:
-    """Pre-build the document pairs that interaction scenarios will corrupt."""
+    """Заранее строит пары документов, которые испортят сценарии взаимодействия."""
     for _ in range(plan["I1"]):
         cur = rng.choice(w.foreign)
         ent = rng.choice(w.entities_of("customer"))
@@ -86,7 +86,7 @@ def _pay_fully(w: World, rng: random.Random, ids: IdFactory, inv: dict) -> None:
 
 def add_plain(w: World, rng: random.Random, ids: IdFactory, plan: dict[str, int],
               target_docs: int) -> None:
-    """Add ordinary documents: guaranteed candidates first, then random ones up to target."""
+    """Добавляет обычные документы: сначала гарантированные кандидаты, затем случайные до целевого числа."""
     last = w.last_day()
     for _ in range(plan["PAYMENT_ALLOCATION"] + 1):
         _pay_fully(w, rng, ids, _plain_invoice(w, rng, ids, max_day=last - 1))

@@ -1,4 +1,4 @@
-"""No private material in observations, errors, trajectories or public files."""
+"""Нет закрытых материалов в observations, ошибках, траекториях и открытых файлах."""
 import base64
 import json
 from pathlib import Path

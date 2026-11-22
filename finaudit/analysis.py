@@ -1,4 +1,4 @@
-"""Measured failure analysis of a policy run (used by jury.py / REPORT.txt)."""
+"""Измеренный разбор сбоев прогона политики (используется jury.py / REPORT.txt)."""
 from __future__ import annotations
 
 import collections
@@ -53,7 +53,7 @@ def _fp_reason(f: dict, pub: dict) -> str:
 
 
 def analyse(episode_dir: str | Path, findings: list[dict], matches: list[list]) -> dict:
-    """Classify the false negatives and false positives of one graded submission."""
+    """Классифицирует ложноотрицательные и ложноположительные выводы одной оценённой отправки."""
     files = read_files(episode_dir)
     pub = parse_public(files)
     truth = json.loads(files["private/truth.json"])
@@ -79,7 +79,7 @@ def analyse(episode_dir: str | Path, findings: list[dict], matches: list[list]) 
 
 
 def merge(parts: list[dict]) -> dict:
-    """Sum several analyse() results into plain dicts."""
+    """Суммирует несколько результатов analyse() в обычные словари."""
     total: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     for part in parts:
         for key, counter in part.items():

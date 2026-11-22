@@ -1,4 +1,4 @@
-"""All 4 policies end validly on 20 episodes; ranking oracle > reconciler > random >= flag_all."""
+"""Все 4 политики корректно завершаются на 20 эпизодах; ранжирование oracle > reconciler > random >= flag_all."""
 import statistics
 
 import pytest

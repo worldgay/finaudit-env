@@ -1,9 +1,9 @@
-"""Normalisation, admissible pairs and maximum bipartite matching (sections 5.2-5.4).
+"""Нормализация, допустимые пары и максимальное паросочетание в двудольном графе (разделы 5.2-5.4).
 
-Conventions follow the organisers' check definitions (docs/CHECKS.txt, "Точные соглашения matcher"):
-strings (type, currency, every id) are compared exactly - no case folding, no trimming;
-affected_ids and evidence_ids are sets; the amount tolerance is a fixed non-negative integer per
-finding type published in policy.json (``amount_tolerance_minor``), 0 when absent.
+Соглашения следуют определениям проверок организаторов (docs/CHECKS.txt, "Точные соглашения matcher"):
+строки (type, currency, каждый ID) сравниваются точно — без приведения регистра и обрезки пробелов;
+affected_ids и evidence_ids — множества; допуск суммы — фиксированное неотрицательное целое для
+каждого типа вывода, опубликованное в policy.json (``amount_tolerance_minor``), 0 при отсутствии.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ DEFAULT_TOLERANCE = 0
 
 @dataclass(frozen=True)
 class NormFinding:
-    """A finding after normalisation."""
+    """Вывод после нормализации."""
 
     type: str
     affected_ids: tuple[str, ...]
@@ -26,14 +26,14 @@ class NormFinding:
 
 
 def normalize(f: dict) -> NormFinding:
-    """affected_ids / evidence_ids become sets of exact strings; nothing else changes."""
+    """affected_ids / evidence_ids становятся множествами точных строк; больше ничего не меняется."""
     return NormFinding(type=f["type"], affected_ids=tuple(sorted(set(f["affected_ids"]))),
                        claimed=f["claimed_amount_minor"], currency=f["currency"],
                        evidence=frozenset(f["evidence_ids"]))
 
 
 def tolerances(policy: object) -> dict[str, int]:
-    """Per-type tolerance from a policy document; anything missing or malformed counts as 0."""
+    """Допуск по типам из документа policy; всё отсутствующее или некорректное считается 0."""
     table = policy.get("amount_tolerance_minor") if isinstance(policy, dict) else None
     out = {t: DEFAULT_TOLERANCE for t in FINDING_TYPES}
     if isinstance(table, dict):
@@ -45,7 +45,7 @@ def tolerances(policy: object) -> dict[str, int]:
 
 def admissible(f: NormFinding, issue: dict, public_ids: set[str] | frozenset[str],
                tol: dict[str, int] | None = None) -> bool:
-    """All conditions of section 5.3 hold for the pair (finding, issue)."""
+    """Для пары (вывод, ошибка) выполняются все условия раздела 5.3."""
     if f.type != issue["type"] or set(f.affected_ids) != set(issue["affected_ids"]):
         return False
     if f.currency != issue["currency"]:
@@ -59,7 +59,7 @@ def admissible(f: NormFinding, issue: dict, public_ids: set[str] | frozenset[str
 
 
 def _kuhn(adj: list[list[int]], findings: list[int], issues: set[int]) -> int:
-    """Size of a maximum matching between ``findings`` and ``issues`` (augmenting paths)."""
+    """Размер максимального паросочетания между ``findings`` и ``issues`` (увеличивающие пути)."""
     owner: dict[int, int] = {}
 
     def augment(fi: int, seen: set[int]) -> bool:
@@ -78,12 +78,12 @@ def _kuhn(adj: list[list[int]], findings: list[int], issues: set[int]) -> int:
 def max_matching(findings: list[NormFinding], issues: list[dict],
                  public_ids: set[str] | frozenset[str],
                  tol: dict[str, int] | None = None) -> list[tuple[int, str]]:
-    """Maximum one-to-one matching with the organisers' deterministic tie-break.
+    """Максимальное взаимно однозначное паросочетание с детерминированным выбором организаторов.
 
-    Among all maximum matchings pick the lexicographically smallest sorted sequence of
-    (issue_id, finding index) pairs, issue ids ordered by Unicode code points: issues are fixed in
-    that order, each taking the smallest finding index that still allows a maximum matching.
-    Returns (finding index, issue_id) pairs sorted by finding index.
+    Среди всех максимальных паросочетаний выбирается лексикографически наименьшая отсортированная
+    последовательность пар (issue_id, индекс вывода), ID ошибок упорядочены по Unicode code points: ошибки
+    фиксируются в этом порядке, каждая берёт наименьший индекс вывода, при котором паросочетание ещё максимально.
+    Возвращает пары (индекс вывода, issue_id), отсортированные по индексу вывода.
     """
     ordered = sorted(issues, key=lambda i: i["issue_id"])
     adj = [[k for k, iss in enumerate(ordered) if admissible(f, iss, public_ids, tol)] for f in findings]

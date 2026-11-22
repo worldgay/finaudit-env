@@ -1,12 +1,12 @@
-"""JSON-lines server around FinAuditEnv (environment + grader in one process).
+"""Сервер JSON-строк вокруг FinAuditEnv (среда + оценщик в одном процессе).
 
-Protocol, one JSON object per line on stdin -> one JSON object per line on stdout:
+Протокол: один JSON-объект на строку в stdin -> один JSON-объект на строку в stdout:
   {"cmd": "reset", "seed": 0, "config": {"episode_dir": "...", "mode": "eval"}}
       -> {"observation": {...}, "info": {...}}
   {"cmd": "step", "action": {...}}  -> {"observation", "reward", "terminated", "truncated", "info"}
-  {"cmd": "timeout"}                -> same shape (wall-clock truncation)
-  {"cmd": "close"}                  -> process exits
-Only the runner talks to this process; the agent never sees its stdin/stdout.
+  {"cmd": "timeout"}                -> та же форма (обрезка по реальному времени)
+  {"cmd": "close"}                  -> процесс завершается
+С этим процессом общается только runner; агент никогда не видит его stdin/stdout.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def _step_reply(out: tuple) -> dict:
 
 
 def serve(env: FinAuditEnv) -> int:
-    """Main loop: read commands until EOF or close."""
+    """Главный цикл: читает команды до EOF или close."""
     for line in sys.stdin:
         try:
             msg = json.loads(line)
@@ -46,14 +46,14 @@ def serve(env: FinAuditEnv) -> int:
                 return 0
             else:
                 _reply({"fatal": "unknown command"})
-        except Exception:  # never leak tracebacks to the pipe
+        except Exception:  # никогда не отдаём трассировки в pipe
             _reply({"fatal": "internal error"})
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point."""
-    ap = argparse.ArgumentParser(description="FinAudit environment server (JSON lines)")
+    """Точка входа CLI."""
+    ap = argparse.ArgumentParser(description="Сервер среды FinAudit (JSON-строки)")
     ap.add_argument("--grader-log", default=None)
     ap.add_argument("--policy-name", default="unknown")
     args = ap.parse_args(argv)

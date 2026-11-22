@@ -1,4 +1,4 @@
-"""Episode generation pipeline and CLI.
+"""Конвейер генерации эпизода и CLI.
 
 python -m finaudit.generator.generate --seed N --config configs/train.json --out DIR
 """
@@ -43,23 +43,23 @@ DEFAULT_CONFIG: dict = {
 
 
 class GenerationError(RuntimeError):
-    """No valid episode after MAX_ATTEMPTS deterministic attempts."""
+    """Нет валидного эпизода после MAX_ATTEMPTS детерминированных попыток."""
 
 
 def normalize_config(config: dict | None) -> dict:
-    """Merge a (partial) config over the defaults and validate it against config.schema.json."""
+    """Накладывает (частичный) config на значения по умолчанию и проверяет его по config.schema.json."""
     cfg = copy.deepcopy(DEFAULT_CONFIG)
     for key, value in (config or {}).items():
         if key == "errors":
             for typ, spec in value.items():
-                # shorthand {"TYPE": 2} or {"TYPE": [0, 2]}; unknown inner keys (e.g. "rate") are ignored
+                # сокращение {"TYPE": 2} или {"TYPE": [0, 2]}; неизвестные внутренние ключи (например, "rate") игнорируются
                 count = spec.get("count") if isinstance(spec, dict) else spec
                 cfg["errors"][typ] = {"count": count}
         elif key in ("size", "interactions", "distractors") and isinstance(value, dict):
             cfg[key] = {**cfg[key], **value}
         elif key in DEFAULT_CONFIG or key == "description":
             cfg[key] = value
-        # any other key (episode_dir, seed, run metadata, ...) does not influence the data
+        # любой другой ключ (episode_dir, seed, метаданные прогона, ...) на данные не влияет
     cfg["distractors"] = {k: v for k, v in cfg["distractors"].items() if k == "min_kinds"}
     problems = errors(cfg, load_schema("config"))
     if problems:
@@ -68,7 +68,7 @@ def normalize_config(config: dict | None) -> dict:
 
 
 def build_clean(rng: random.Random, cfg: dict) -> tuple:
-    """Passes 1-2: hidden world and clean books. Returns (world, plan, ids, rows)."""
+    """Проходы 1-2: скрытый мир и чистые книги. Возвращает (world, plan, ids, rows)."""
     ids = IdFactory(rng)
     w = new_world(rng, cfg, ids)
     plan = plan_errors(rng, cfg)
@@ -105,7 +105,7 @@ def _build(rng: random.Random, cfg: dict, seed: int, attempt: int) -> Episode:
 
 
 def generate_episode(seed: int, config: dict | None = None) -> Episode:
-    """Generate a verified episode deterministically from (seed, config, ENV_VERSION)."""
+    """Детерминированно генерирует проверенный эпизод из (seed, config, ENV_VERSION)."""
     cfg = normalize_config(config)
     last: list[str] = []
     for attempt in range(MAX_ATTEMPTS):
@@ -122,19 +122,19 @@ def generate_episode(seed: int, config: dict | None = None) -> Episode:
 
 
 def generate_to_dir(seed: int, config: dict | None, out_root: str | Path) -> Path:
-    """Generate and write ``<out_root>/<episode_id>/{public,private}``; returns the episode dir."""
+    """Генерирует и записывает ``<out_root>/<episode_id>/{public,private}``; возвращает каталог эпизода."""
     ep = generate_episode(seed, config)
     return write_files(ep.files, Path(out_root) / ep.episode_id)
 
 
 def load_config(path: str | Path) -> dict:
-    """Read a JSON config file."""
+    """Читает JSON-файл конфигурации."""
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point."""
-    ap = argparse.ArgumentParser(description="Generate one FinAudit episode")
+    """Точка входа CLI."""
+    ap = argparse.ArgumentParser(description="Генерация одного эпизода FinAudit")
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--config", default=None)
     ap.add_argument("--out", required=True)

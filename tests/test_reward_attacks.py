@@ -1,4 +1,4 @@
-"""The 12 mandatory reward-robustness checks with exact numbers."""
+"""12 обязательных проверок устойчивости награды с точными числами."""
 import copy
 
 import pytest
@@ -109,7 +109,7 @@ def test_tolerance_edges(env_err):
     issue = sorted(env_err.truth["issues"], key=lambda i: -i["expected_amount_minor"])[0]
     tol = env_err.tol[issue["type"]]
     assert env_err.tol == env_err.policy_doc["amount_tolerance_minor"] and tol == 0
-    # pure grader check on the real issue
+    # чистая проверка оценщика на реальной ошибке
     from finaudit.grader.grader import grade
     for delta, tp in ((tol, 1), (-tol, 1), (tol + 1, 0), (-(tol + 1), 0)):
         f = {"type": issue["type"], "affected_ids": issue["affected_ids"],
@@ -176,7 +176,7 @@ def test_timeout(env_clean):
     burn(env_clean, 99)
     obs, reward, term, trunc, info = env_clean.step({"action": "list_records", "table": "fx"})
     assert trunc and not term and info["inspection_steps"] == 100
-    assert reward == pytest.approx(0.8)  # documented property: empty answer on a clean company
+    assert reward == pytest.approx(0.8)  # документированное свойство: пустой ответ на чистой компании
 
 
 def test_oracle_perfect_on_50_seeds():

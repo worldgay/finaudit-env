@@ -1,8 +1,8 @@
-"""Run policies against the environment.
+"""Запуск политик в среде.
 
-train: in-process (fast).  eval: three processes talking JSON lines -
-  runner (this process) <-> env-server (user `grader`)  and  runner <-> agent (user `agent`).
-The agent only ever receives observations; reward/metrics go to grader_log.jsonl.
+train: в одном процессе (быстро).  eval: три процесса, общающиеся JSON-строками -
+  runner (этот процесс) <-> env-server (пользователь `grader`)  и  runner <-> агент (пользователь `agent`).
+Агент получает только observations; награда/метрики идут в grader_log.jsonl.
 
 python -m finaudit.runner trajectories
 python -m finaudit.runner run --episode DIR --policy NAME [--mode eval] [--allow-oracle]
@@ -34,11 +34,11 @@ from finaudit.util.canon import dumps
 ROOT = Path(__file__).resolve().parent.parent
 POLICIES = ("random_explorer", "reconciler", "flag_all", "oracle")
 MAX_SECONDS = 60.0
-MAX_LINE = 1_000_000  # bytes accepted per agent action line
+MAX_LINE = 1_000_000  # байт, принимаемых на одну строку действия агента
 
 
 def make_policy(name: str, policy_seed: int = 0, truth: dict | None = None) -> Policy:
-    """Instantiate a policy by name (oracle needs truth: grader-only)."""
+    """Создаёт политику по имени (oracle нужен truth: только для оценщика)."""
     if name == "oracle":
         if truth is None:
             raise ValueError("oracle is grader-only and needs truth")
@@ -66,7 +66,7 @@ def _append(path: Path | None, records: list[dict]) -> None:
 def run_episode_train(episode_dir: str | Path, policy_name: str, traj_path: str | Path | None = None,
                       policy_seed: int = 0, max_seconds: float = MAX_SECONDS,
                       grader_log: str | Path | None = None) -> dict:
-    """Run one policy in-process in train mode; returns a result summary."""
+    """Запускает одну политику в процессе в режиме train; возвращает сводку результата."""
     started = time.monotonic()
     env = FinAuditEnv(grader_log=grader_log)
     env.policy_name = policy_name
@@ -95,9 +95,9 @@ def run_episode_train(episode_dir: str | Path, policy_name: str, traj_path: str 
             "matches": [list(m) for m in g.matches]}
 
 
-# ---------------------------------------------------------------------- eval (isolated processes)
+# ---------------------------------------------------------------------- eval (изолированные процессы)
 def isolation_users() -> tuple[str | None, str | None]:
-    """('grader', 'agent') when running as root with both users present, else (None, None)."""
+    """('grader', 'agent') при запуске от root с обоими пользователями, иначе (None, None)."""
     if os.geteuid() != 0:
         return None, None
     try:
@@ -114,7 +114,7 @@ def _env_vars(home: str) -> dict:
 
 
 def secure_dir(path: Path, owner: str | None) -> None:
-    """chown -R owner and chmod 700 (no-op without isolation users)."""
+    """chown -R владельца и chmod 700 (без пользователей изоляции ничего не делает)."""
     if owner is None:
         return
     for p in [path, *path.rglob("*")]:
@@ -123,9 +123,9 @@ def secure_dir(path: Path, owner: str | None) -> None:
 
 
 def _read_line(proc: subprocess.Popen, deadline: float) -> str | None:
-    """One line (at most MAX_LINE bytes) from an agent's stdout, or None on timeout/EOF.
+    """Одна строка (не больше MAX_LINE байт) из stdout агента или None при таймауте/EOF.
 
-    Raw reads into a per-process buffer, so a partial line without newline cannot block past the deadline.
+    Сырые чтения в буфер процесса, поэтому неполная строка без перевода строки не блокирует дольше дедлайна.
     """
     fd = proc.stdout.fileno()
     buf: bytes = getattr(proc, "_line_buf", b"")
@@ -144,7 +144,7 @@ def _read_line(proc: subprocess.Popen, deadline: float) -> str | None:
 
 
 def _write_line(proc: subprocess.Popen, data: bytes, deadline: float) -> bool:
-    """Write to an agent's stdin without blocking past the deadline (False: timeout or agent gone)."""
+    """Пишет в stdin агента, не блокируясь дольше дедлайна (False: таймаут или агент завершился)."""
     fd = proc.stdin.fileno()
     os.set_blocking(fd, False)
     view = memoryview(data)
@@ -162,7 +162,7 @@ def _write_line(proc: subprocess.Popen, data: bytes, deadline: float) -> bool:
 
 
 class _Server:
-    """Handle to the env-server subprocess."""
+    """Дескриптор подпроцесса env-server."""
 
     def __init__(self, grader_log: Path, policy_name: str, user: str | None, home: str) -> None:
         cmd = [sys.executable, "-m", "finaudit.env.server", "--grader-log", str(grader_log),
@@ -171,13 +171,13 @@ class _Server:
                                      env=_env_vars(home), cwd=home, user=user)
 
     def call(self, msg: dict) -> dict:
-        """Send one command and wait for the reply."""
+        """Отправляет одну команду и ждёт ответ."""
         self.proc.stdin.write(dumps(msg) + "\n")
         self.proc.stdin.flush()
         return json.loads(self.proc.stdout.readline())
 
     def close(self) -> None:
-        """Stop the server."""
+        """Останавливает сервер."""
         try:
             self.proc.stdin.write(dumps({"cmd": "close"}) + "\n")
             self.proc.stdin.close()
@@ -194,7 +194,7 @@ def _spawn_agent(name: str, seed: int, user: str | None, workdir: str) -> subpro
 
 def _agent_loop(server: _Server, agent, oracle, first: dict, eid: str, name: str,
                 deadline: float) -> list[dict]:
-    """Relay observations to the agent and actions to the server until the episode ends."""
+    """Передаёт observations агенту и действия серверу до конца эпизода."""
     obs, step, records = first, 0, []
     while True:
         if oracle is not None:
@@ -209,7 +209,7 @@ def _agent_loop(server: _Server, agent, oracle, first: dict, eid: str, name: str
                 return records
             try:
                 action = json.loads(line)
-            except (ValueError, RecursionError):  # bad JSON, 4300-digit ints, deep nesting
+            except (ValueError, RecursionError):  # плохой JSON, целые из 4300 цифр, глубокая вложенность
                 action = line.strip()[:200]
         reply = server.call({"cmd": "step", "action": action})
         step += 1
@@ -222,10 +222,10 @@ def _agent_loop(server: _Server, agent, oracle, first: dict, eid: str, name: str
 
 def run_episode_eval(episode_dir: str | Path, policy_name: str, run_dir: str | Path, policy_seed: int = 0,
                      allow_oracle: bool = False, max_seconds: float = MAX_SECONDS) -> dict:
-    """Run one policy in eval mode with process (and, as root in Docker, user) isolation.
+    """Запускает одну политику в режиме eval с изоляцией процессов (и пользователей — от root в Docker).
 
-    The env-server works on a grader-owned private staging copy of the episode (mode 700); the agent
-    runs in an empty directory of its own and only ever receives observations.
+    env-server работает с закрытой промежуточной копией эпизода, принадлежащей grader (права 700); агент
+    работает в собственном пустом каталоге и получает только observations.
     """
     if policy_name == "oracle" and not allow_oracle:
         raise PermissionError("oracle is grader-only: pass --allow-oracle")
@@ -247,7 +247,7 @@ def run_episode_eval(episode_dir: str | Path, policy_name: str, run_dir: str | P
                              "config": {"episode_dir": str(stage / "episode"), "mode": "eval"}})
         obs = first["observation"]
         eid = obs["result"]["manifest"]["episode_id"]
-        if policy_name == "oracle":  # grader-only: runs inside the orchestrator, never as an agent
+        if policy_name == "oracle":  # только для оценщика: работает внутри оркестратора, никогда как агент
             oracle = make_policy("oracle", truth=json.loads(read_files(episode_dir)["private/truth.json"]))
         else:
             agent = _spawn_agent(policy_name, policy_seed, agent_user, workdir)
@@ -273,7 +273,7 @@ def run_episode_eval(episode_dir: str | Path, policy_name: str, run_dir: str | P
 
 def write_trajectories(out: Path = ROOT / "trajectories" / "trajectories.jsonl",
                        episodes: Path = ROOT / "episodes" / "train") -> list[dict]:
-    """4 policies x train episodes in train mode -> trajectories.jsonl."""
+    """4 политики x train-эпизоды в режиме train -> trajectories.jsonl."""
     if out.exists():
         out.unlink()
     results = []
@@ -284,8 +284,8 @@ def write_trajectories(out: Path = ROOT / "trajectories" / "trajectories.jsonl",
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point."""
-    ap = argparse.ArgumentParser(description="FinAudit policy runner")
+    """Точка входа CLI."""
+    ap = argparse.ArgumentParser(description="Запуск политик FinAudit")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("trajectories")
     run = sub.add_parser("run")
@@ -298,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     if args.cmd == "trajectories":
         results = write_trajectories()
-        sys.stdout.write(f"trajectories: {len(results)} episodes written\n")
+        sys.stdout.write(f"trajectories: записано эпизодов {len(results)}\n")
         return 0
     if args.mode == "train":
         res = run_episode_train(args.episode, args.policy, Path(args.run_dir) / "trajectories.jsonl", args.seed,

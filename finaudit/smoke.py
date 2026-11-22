@@ -1,5 +1,5 @@
-"""Smoke stage of `make check`: generate 2 episodes in a temp dir, verify them,
-run every available policy on them and scan all observations / files for leaks."""
+"""Этап smoke в `make check`: генерирует 2 эпизода во временном каталоге, проверяет их,
+запускает на них каждую доступную политику и сканирует все observations / файлы на утечки."""
 from __future__ import annotations
 
 import json
@@ -17,7 +17,7 @@ SMOKE_CONFIG = {"size": {"ledger": [200, 600], "documents": [20, 80]},
 
 
 def main() -> int:
-    """Run the smoke checks; non-zero exit on any problem."""
+    """Запускает smoke-проверки; ненулевой код выхода при любой проблеме."""
     from finaudit.runner import POLICIES, run_episode_train
     problems: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
@@ -31,14 +31,14 @@ def main() -> int:
             truth = json.loads(read_files(d)["private/truth.json"])
             for name in POLICIES:
                 res = run_episode_train(d, name, traj, policy_seed=1)
-                sys.stdout.write(f"smoke: {d.name} issues={len(truth['issues']):2d} {name:15s} "
-                                 f"reward={res['reward']:+.3f} f1={res['f1']:.3f} steps={res['steps']}\n")
+                sys.stdout.write(f"smoke: {d.name} ошибок={len(truth['issues']):2d} {name:15s} "
+                                 f"награда={res['reward']:+.3f} f1={res['f1']:.3f} шагов={res['steps']}\n")
                 if name == "oracle" and res["f1"] != 1.0:
                     problems.append(f"oracle f1 {res['f1']} on {d.name}")
         problems += scan_trajectory_file(traj)
     for p in problems:
-        sys.stdout.write(f"smoke FAIL: {p}\n")
-    sys.stdout.write(f"smoke: {'OK' if not problems else 'FAILED'}\n")
+        sys.stdout.write(f"smoke СБОЙ: {p}\n")
+    sys.stdout.write(f"smoke: {'OK' if not problems else 'СБОЙ'}\n")
     return 1 if problems else 0
 
 

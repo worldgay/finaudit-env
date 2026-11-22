@@ -1,1 +1,1 @@
-"""finaudit.generator package."""
+"""Пакет finaudit.generator."""

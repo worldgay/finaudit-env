@@ -1,4 +1,4 @@
-"""judge_adapter.py against the organisers' contract block C01-C20 (docs/CHECKS.txt)."""
+"""judge_adapter.py против контрактного блока организаторов C01-C20 (docs/CHECKS.txt)."""
 import json
 import time
 from pathlib import Path

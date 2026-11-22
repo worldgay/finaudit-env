@@ -1,4 +1,4 @@
-"""Reward attacks measured on real episodes (train mode, exact numbers for REPORT.txt)."""
+"""Атаки на награду, измеренные на реальных эпизодах (режим train, точные числа для REPORT.txt)."""
 from __future__ import annotations
 
 import copy
@@ -36,16 +36,16 @@ def _mutated(findings: list[dict], how: str) -> list[dict]:
         elif how == "wrong_currency":
             f["currency"] = "GBP" if f["currency"] != "GBP" else "JPY"
         elif how == "amount_off_tol_plus_1":
-            f["claimed_amount_minor"] += 1  # published tolerance is 0 for every type
+            f["claimed_amount_minor"] += 1  # опубликованный допуск равен 0 для каждого типа
     return out
 
 
 def measure_attacks(dirs: list[Path]) -> dict:
-    """Mean reward of each attack over the episodes it applies to."""
+    """Средняя награда каждой атаки по эпизодам, к которым она применима."""
     acc: dict[str, list[float]] = {}
 
     def add(key: str, value: float) -> None:
-        """Record one measurement."""
+        """Записывает одно измерение."""
         acc.setdefault(key, []).append(value)
 
     for d in dirs:

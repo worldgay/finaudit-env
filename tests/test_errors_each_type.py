@@ -1,4 +1,4 @@
-"""Each error type on its own: exactly one issue, right amount/currency, reachable evidence."""
+"""Каждый тип ошибки отдельно: ровно одна ошибка, верные сумма/валюта, достижимые доказательства."""
 import collections
 import json
 

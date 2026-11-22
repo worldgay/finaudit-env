@@ -1,7 +1,7 @@
-"""Undo the logged injections (provenance.json) to recover the books *before* any error.
+"""Откатывает записанные внесения ошибок (provenance.json), чтобы восстановить книги *до* любой ошибки.
 
-Independent of the generator internals: it only replays the change log backwards on the public
-records, then checks the pre-error accounting equalities with the independent reference auditor.
+Не зависит от внутренностей генератора: только проигрывает журнал изменений в обратном порядке на открытых
+записях, затем проверяет бухгалтерские равенства до ошибки независимым эталонным аудитором.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from finaudit.util.timeutil import in_period, local_date, parse_date
 
 
 def revert(public: dict, provenance: dict) -> dict:
-    """Return a copy of ``public`` with every logged change undone (latest first)."""
+    """Возвращает копию ``public``, в которой отменено каждое записанное изменение (с последнего)."""
     out = copy.deepcopy(public)
     ledger, invoices = out["ledger"], out["invoices"]
     for entry in sorted(provenance.get("injections", []), key=lambda e: e["order"], reverse=True):
@@ -33,7 +33,7 @@ def revert(public: dict, provenance: dict) -> dict:
 
 
 def pre_error_problems(public: dict, provenance: dict) -> list[str]:
-    """Accounting equalities that must hold before the errors were injected."""
+    """Бухгалтерские равенства, которые должны выполняться до внесения ошибок."""
     clean = revert(public, provenance)
     m = clean["manifest"]
     start, end = parse_date(m["period_start"]), parse_date(m["period_end"])

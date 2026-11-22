@@ -1,4 +1,4 @@
-"""`make demo`: a terminal walk-through on an I1 episode (no private data used by the auditor)."""
+"""`make demo`: пошаговый показ в терминале на эпизоде I1 (аудитор не использует закрытые данные)."""
 from __future__ import annotations
 
 import json
@@ -22,12 +22,12 @@ NO_OTHER_ERRORS = {t: {"count": 0} for t in ("DUPLICATE_INVOICE", "PAYMENT_ALLOC
 
 
 def say(text: str = "") -> None:
-    """Print one line."""
+    """Печатает одну строку."""
     sys.stdout.write(text + "\n")
 
 
 class Walk:
-    """Executes actions on the env and prints them."""
+    """Выполняет действия в среде и печатает их."""
 
     def __init__(self, env: FinAuditEnv) -> None:
         self.env = env
@@ -38,10 +38,10 @@ class Walk:
         if "findings" in action:
             shown["findings"] = f"<{len(action['findings']['findings'])} findings>"
         res = dumps(obs["result"] if obs["ok"] else obs["error"])
-        say(f"  step {self.env.steps_used:3d} > {dumps(shown)}")
+        say(f"  шаг {self.env.steps_used:3d} > {dumps(shown)}")
         say(f"           < {res[:150]}{'…' if len(res) > 150 else ''}")
         if term or trunc:
-            say(f"           reward={reward:+.3f} info={dumps(info)}")
+            say(f"           награда={reward:+.3f} info={dumps(info)}")
         return obs
 
 
@@ -56,12 +56,12 @@ def _all(walk: Walk, table: str) -> list[dict]:
 
 
 def scripted_audit(ep_dir: Path) -> None:
-    """Find a late-evening foreign payment on the last day and check its FX and allocation."""
+    """Находит поздний вечерний иностранный платёж в последний день и проверяет его FX и распределение."""
     env = FinAuditEnv()
     obs, _ = env.reset(0, {"episode_dir": str(ep_dir), "mode": "train"})
     m = obs["result"]["manifest"]
-    say(f"Company {m['company_name']}, base {m['base_currency']}, tz {m['timezone']}, "
-        f"period {m['period_start']}..{m['period_end']}, counts {m['counts']}")
+    say(f"Компания {m['company_name']}, базовая валюта {m['base_currency']}, пояс {m['timezone']}, "
+        f"период {m['period_start']}..{m['period_end']}, количества {m['counts']}")
     walk = Walk(env)
     pays = _all(walk, "payments")
     tz = zone(m["timezone"])
@@ -70,7 +70,7 @@ def scripted_audit(ep_dir: Path) -> None:
             and parse_ts(p["timestamp"]).astimezone(tz).hour >= 21]
     pay = walk({"action": "get_document", "doc_id": late[0]["doc_id"]})["result"]["document"]
     local_day = parse_ts(pay["timestamp"]).astimezone(tz).date().isoformat()
-    say(f"  -> payment {pay['payment_id']} at {pay['timestamp']} is {local_day} local time")
+    say(f"  -> платёж {pay['payment_id']} в {pay['timestamp']} — это {local_day} по местному времени")
     invs = {i["invoice_id"]: i for i in _all(walk, "invoices")}
     inv = invs[pay["invoice_refs"][0]["invoice_id"]]
     rows = [r for r in _all(walk, "ledger") if r["payment_id"] == pay["payment_id"]]
@@ -90,33 +90,33 @@ def scripted_audit(ep_dir: Path) -> None:
     alloc = walk({"action": "calculator", "expression": f"{ar} / {inv_rate} / {10 ** (eb - es)}"})
     allocated = round_half_even(Decimal(alloc["result"]["value"]))
     gap = pay["invoice_refs"][0]["amount_minor"] - allocated
-    say(f"  -> BANK booked {bank['debit_minor'] + bank['credit_minor']} vs policy {want_bank}; "
-        f"unallocated {gap} {pay['currency']} minor units")
+    say(f"  -> BANK проведён {bank['debit_minor'] + bank['credit_minor']}, по policy {want_bank}; "
+        f"не распределено {gap} мин. ед. {pay['currency']}")
     findings = [
         {"type": "FX_CONVERSION", "affected_ids": [pay["payment_id"]],
          "claimed_amount_minor": abs(bank["debit_minor"] + bank["credit_minor"] - want_bank),
          "currency": m["base_currency"], "evidence_ids": [pay["doc_id"], pay_rate["fx_id"], bank["row_id"]],
-         "explanation": "BANK line converted at a rate of another date"},
+         "explanation": "строка BANK конвертирована по курсу другой даты"},
         {"type": "PAYMENT_ALLOCATION", "affected_ids": [inv["invoice_id"], pay["payment_id"]],
          "claimed_amount_minor": gap, "currency": pay["currency"],
          "evidence_ids": [pay["doc_id"], inv["doc_id"], f"fx:{inv_day}:{pay['currency']}:{m['base_currency']}"]
          + [r["row_id"] for r in rows],
-         "explanation": "part of the payment parked on SUSPENSE"}]
+         "explanation": "часть платежа отложена на SUSPENSE"}]
     walk({"action": "submit", "findings": {"episode_id": m["episode_id"], "findings": findings}})
 
 
 def main() -> int:
-    """Run the demo."""
+    """Запускает демо."""
     tmp = Path(tempfile.mkdtemp(prefix="demo-"))
     cfg = {**load_config(ROOT / "configs" / "i1.json"), "errors": NO_OTHER_ERRORS}
     ep = generate_to_dir(SEED, cfg, tmp)
-    say("== 1. Scripted auditor on an I1 episode (FX + partial allocation at the period boundary) ==")
+    say("== 1. Скриптовый аудитор на эпизоде I1 (FX + частичное распределение на границе периода) ==")
     scripted_audit(ep)
     say("\n== 2. The four baseline policies on the same episode (train mode) ==")
     for k, name in enumerate(POLICIES):
         r = run_episode_train(ep, name, policy_seed=k)
-        say(f"  {name:15s} reward={r['reward']:+.3f} F1={r['f1']:.3f} P={r['precision']:.3f} "
-            f"R={r['recall']:.3f} steps={r['steps']}")
+        say(f"  {name:15s} награда={r['reward']:+.3f} F1={r['f1']:.3f} P={r['precision']:.3f} "
+            f"R={r['recall']:.3f} шагов={r['steps']}")
     say("\n== 3. Attacks (see REPORT.txt for the 20-episode numbers) ==")
     from finaudit.attacks import measure_attacks
     for key, val in measure_attacks([ep]).items():
@@ -124,10 +124,10 @@ def main() -> int:
     say("\n== 4. Shuffle + rename every id; replay the same seed ==")
     moved = transform(ep, 1, tmp / "t")
     a, b = run_episode_train(ep, "oracle"), run_episode_train(moved, "oracle")
-    say(f"  oracle reward original={a['reward']} transformed={b['reward']} ({ep.name} -> {moved.name})")
+    say(f"  награда oracle: исходный={a['reward']} преобразованный={b['reward']} ({ep.name} -> {moved.name})")
     again = generate_to_dir(SEED, cfg, tmp / "replay")
     same = sha256_text(dumps(read_files(again))) == sha256_text(dumps(read_files(ep)))
-    say(f"  same seed -> identical sha256 of all files: {same}")
+    say(f"  тот же seed -> одинаковый sha256 всех файлов: {same}")
     return 0
 
 

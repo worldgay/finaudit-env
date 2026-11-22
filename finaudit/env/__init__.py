@@ -1,1 +1,1 @@
-"""finaudit.env package."""
+"""Пакет finaudit.env."""

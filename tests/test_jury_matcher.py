@@ -1,8 +1,8 @@
-"""The organisers' matcher/reward block (docs/CHECKS.txt): tests 1-20 and open examples M01-M12.
+"""Блок matcher/награды организаторов (docs/CHECKS.txt): тесты 1-20 и открытые примеры M01-M12.
 
-Fixture: one issue A of a supported type T, canonical affected record R1, 10000 KZT minor units,
-one admissible evidence set {D1, D2}; tolerance 0 unless stated; inspection_steps 10 by default.
-Real results are compared with an absolute error of 1e-9, as the definitions require.
+Фикстура: одна ошибка A поддерживаемого типа T, каноническая затронутая запись R1, 10000 минимальных единиц KZT,
+один допустимый набор доказательств {D1, D2}; допуск 0, если не сказано иное; inspection_steps по умолчанию 10.
+Вещественные результаты сравниваются с абсолютной погрешностью 1e-9, как требуют определения.
 """
 from fractions import Fraction
 
@@ -62,12 +62,12 @@ def test_05_two_identical_correct():
 
 
 @pytest.mark.parametrize("finding", [
-    F(typ=OTHER_T),                      # 06 wrong type
-    F(affected=("R2",)),                 # 07 other existing, unaffected record
-    F(amount=10001),                     # 08 amount off with tolerance 0
-    F(cur="USD"),                        # 09 other currency
-    F(ev=("D1",)),                       # 10 incomplete evidence set
-    F(ev=("D1", "U-404")),               # 11 missing evidence id instead of D2
+    F(typ=OTHER_T),                      # 06 неверный тип
+    F(affected=("R2",)),                 # 07 другая существующая, но не затронутая запись
+    F(amount=10001),                     # 08 сумма отличается при допуске 0
+    F(cur="USD"),                        # 09 другая валюта
+    F(ev=("D1",)),                       # 10 неполный набор доказательств
+    F(ev=("D1", "U-404")),               # 11 отсутствующий ID доказательства вместо D2
 ], ids=["06", "07", "08", "09", "10", "11"])
 def test_06_to_11_wrong_field(finding):
     check(run([issue()], [finding]), 0, 1, 1, 0, 0, 0, -1)
@@ -98,9 +98,9 @@ def test_15_to_17_step_cost(steps, reward):
 
 
 @pytest.mark.parametrize("findings", [
-    [F()] * 31,                                                   # 18 more than 30 findings
-    [F(ev=tuple(f"D{i}" for i in range(11)))],                    # 19 eleven distinct evidence ids
-    [F(explanation="x" * 1001)],                                  # 20 1001 ASCII characters
+    [F()] * 31,                                                   # 18 больше 30 выводов
+    [F(ev=tuple(f"D{i}" for i in range(11)))],                    # 19 одиннадцать различных ID доказательств
+    [F(explanation="x" * 1001)],                                  # 20 1001 ASCII-символ
 ], ids=["18", "19", "20"])
 def test_18_to_20_structure_limits(findings):
     res = run([issue()], findings)
@@ -112,7 +112,7 @@ def test_explanation_limit_counts_code_points():
     assert not run([issue()], [F(explanation="ж" * 1001)]).valid
 
 
-# ---------------------------------------------------------------- open examples M01-M12
+# ---------------------------------------------------------------- открытые примеры M01-M12
 def m_issue(iid="A", amount=10000):
     return issue(iid, affected=("R1", "R2"), amount=amount)
 
@@ -169,7 +169,7 @@ def test_m09_amount_must_be_json_integer(amount):
 
 def test_m10_maximum_not_greedy():
     a, b = m_issue("A", 10000), m_issue("B", 10002)
-    findings = [M(amount=10001), M(amount=10000)]  # F0 fits A and B (tau=1), F1 fits only A
+    findings = [M(amount=10001), M(amount=10000)]  # F0 подходит A и B (tau=1), F1 подходит только A
     res = run([a, b], findings, tau=1)
     assert (res.tp, res.fp, res.fn) == (2, 0, 0)
     assert sorted(res.matches) == [(0, "B"), (1, "A")]
